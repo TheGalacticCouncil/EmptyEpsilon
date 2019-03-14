@@ -9,7 +9,7 @@
 #include "gui/gui2_togglebutton.h"
 
 GuiMissileTubeControls::GuiMissileTubeControls(GuiContainer* owner, string id)
-: GuiAutoLayout(owner, id, LayoutVerticalBottomToTop), load_type(MW_None), manual_aim(false), missile_target_angle(0)
+: GuiAutoLayout(owner, id, LayoutVerticalBottomToTop), load_type(MW_None)
 {
     setSize(GuiElement::GuiSizeMax, GuiElement::GuiSizeMax);
 
@@ -41,8 +41,8 @@ GuiMissileTubeControls::GuiMissileTubeControls(GuiContainer* owner, string id)
                 return;
             if (my_spaceship->weapon_tube[n].isLoaded())
             {
-                float target_angle = missile_target_angle;
-                if (!manual_aim)
+                float target_angle = my_spaceship->manual_aim_angle;
+                if (!my_spaceship->manual_aim)
                 {
                     target_angle = my_spaceship->weapon_tube[n].calculateFiringSolution(my_spaceship->getTarget());
                     if (target_angle == std::numeric_limits<float>::infinity())
@@ -57,23 +57,24 @@ GuiMissileTubeControls::GuiMissileTubeControls(GuiContainer* owner, string id)
         row.loading_bar->setColor(sf::Color(128, 128, 128))->setSize(200, 50);
         row.loading_label = new GuiLabel(row.loading_bar, id + "_" + string(n) + "_PROGRESS_LABEL", "Loading", 35);
         row.loading_label->setSize(GuiElement::GuiSizeMax, GuiElement::GuiSizeMax);
-        
+
         rows[n] = row;
     }
-    
-    
+
+
     for (int n = MW_Count-1; n >= 0; n--)
     {
         load_type_rows[n].layout = new GuiAutoLayout(this, id + "_ROW_" + string(n), LayoutHorizontalLeftToRight);
         load_type_rows[n].layout->setSize(GuiElement::GuiSizeMax, 40);
-        
+
         load_type_rows[n].button = new GuiToggleButton(load_type_rows[n].layout, id + "_MW_" + string(n), getMissileWeaponName(EMissileWeapons(n)), [this, n](bool value) {
             if (value)
                 load_type = EMissileWeapons(n);
             else
                 load_type = MW_None;
-            for(int idx = 0; idx < MW_Count; idx++)
-                load_type_rows[idx].button->setValue(idx == load_type);
+
+            // Set selected weapon to my_spaceship. Weapons screen will take care of updating the UI.
+            my_spaceship->selected_weapon = load_type;
         });
         load_type_rows[n].button->setTextSize(28)->setSize(200, 40);
     }
@@ -92,7 +93,7 @@ void GuiMissileTubeControls::onDraw(sf::RenderTarget& window){
         load_type_rows[n].button->setText(getMissileWeaponName(EMissileWeapons(n)) + " [" + string(my_spaceship->weapon_storage[n]) + "/" + string(my_spaceship->weapon_storage_max[n]) + "]");
         load_type_rows[n].layout->setVisible(my_spaceship->weapon_storage_max[n] > 0);
     }
-    
+
     for (int n = 0; n < my_spaceship->weapon_tube_count; n++)
     {
         WeaponTube& tube = my_spaceship->weapon_tube[n];
@@ -171,8 +172,8 @@ void GuiMissileTubeControls::onHotkey(const HotkeyResult& key)
                 my_spaceship->commandUnloadTube(n);
             if (key.hotkey == "FIRE_TUBE_" + string(n+1))
             {
-                float target_angle = missile_target_angle;
-                if (!manual_aim)
+                float target_angle = my_spaceship->manual_aim_angle;
+                if (!my_spaceship->manual_aim)
                 {
                     target_angle = my_spaceship->weapon_tube[n].calculateFiringSolution(my_spaceship->getTarget());
                     if (target_angle == std::numeric_limits<float>::infinity())
@@ -186,22 +187,22 @@ void GuiMissileTubeControls::onHotkey(const HotkeyResult& key)
 
 void GuiMissileTubeControls::setMissileTargetAngle(float angle)
 {
-    missile_target_angle = angle;
+    my_spaceship->manual_aim_angle = angle;
 }
 
 float GuiMissileTubeControls::getMissileTargetAngle()
 {
-    return missile_target_angle;
+    return my_spaceship->manual_aim_angle;
 }
 
 void GuiMissileTubeControls::setManualAim(bool manual)
 {
-    manual_aim = manual;
+    my_spaceship->manual_aim = manual;
 }
 
 bool GuiMissileTubeControls::getManualAim()
 {
-    return manual_aim;
+    return my_spaceship->manual_aim;
 }
 
 void GuiMissileTubeControls::selectMissileWeapon(EMissileWeapons type)

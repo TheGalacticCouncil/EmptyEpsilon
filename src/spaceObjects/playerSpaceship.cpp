@@ -68,7 +68,7 @@ REGISTER_SCRIPT_SUBCLASS(PlayerSpaceship, SpaceShip)
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, addCustomMessage);
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, addCustomMessageWithCallback);
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, removeCustom);
-    
+
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, getBeamSystemTarget);
     /// Gets the name of the target system, instead of the ID
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, getBeamSystemTargetName);
@@ -79,11 +79,15 @@ REGISTER_SCRIPT_SUBCLASS(PlayerSpaceship, SpaceShip)
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandWarp);
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandJump);
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandSetTarget);
+    REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandNextTarget);
+    REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandPreviousTarget);
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandLoadTube);
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandUnloadTube);
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandFireTube);
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandFireTubeAtTarget);
+    REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandFireTubeAtCurrentTarget);
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandSetShields);
+    REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandCalibrateShields);
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandMainScreenSetting);
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandMainScreenOverlay);
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandScan);
@@ -104,15 +108,25 @@ REGISTER_SCRIPT_SUBCLASS(PlayerSpaceship, SpaceShip)
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandSetBeamFrequency);
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandSetBeamSystemTarget);
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandSetShieldFrequency);
+    REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandSetShieldFrequencySelection);
+    REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandSetNextShieldFrequencySelection);
+    REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandSetPreviousShieldFrequencySelection);
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandAddWaypoint);
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandRemoveWaypoint);
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandMoveWaypoint);
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandActivateSelfDestruct);
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandCancelSelfDestruct);
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandConfirmDestructCode);
+    // Confirm all self destruct codes without actually entering the codes
+    REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandConfirmSelfDestruct);
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandCombatManeuverBoost);
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandSetScienceLink);
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandSetAlertLevel);
+    REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandSetAimLock);
+    REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandSetAimAngle);
+    REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandSelectWeapon);
+    REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandSelectSystem);
+
 
     // Return the number of Engineering repair crews on the ship.
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, getRepairCrewCount);
@@ -182,6 +196,17 @@ static const int16_t CMD_ABORT_DOCK = 0x0026;
 static const int16_t CMD_SET_MAIN_SCREEN_OVERLAY = 0x0027;
 static const int16_t CMD_HACKING_FINISHED = 0x0028;
 static const int16_t CMD_CUSTOM_FUNCTION = 0x0029;
+static const int16_t CMD_SET_SHIELD_FREQUENCY_SELECTION = 0x002A;
+static const int16_t CMD_SET_NEXT_SHIELD_FREQUENCY_SELECTION = 0x002B;
+static const int16_t CMD_SET_PREVIOUS_SHIELD_FREQUENCY_SELECTION = 0x002C;
+static const int16_t CMD_NEXT_TARGET = 0x002D;
+static const int16_t CMD_PREVIOUS_TARGET = 0x002E;
+static const int16_t CMD_SET_AIM_LOCK = 0x002F;
+static const int16_t CMD_SET_AIM_ANGLE = 0x0030;
+static const int16_t CMD_CALIBRATE_SHIELDS = 0x0031;
+static const int16_t CMD_SELECT_WEAPON = 0x0032;
+static const int16_t CMD_SELECT_SYSTEM = 0x0033;
+static const int16_t CMD_COFIRM_ALL_SELF_DESTRUCT = 0x0034;
 
 string alertLevelToString(EAlertLevel level)
 {
@@ -226,6 +251,11 @@ PlayerSpaceship::PlayerSpaceship()
     alert_level = AL_Normal;
     shields_active = false;
     control_code = "";
+    selected_shield_frequency = 1;
+    selected_weapon = EMissileWeapons::MW_None;
+    manual_aim = false;
+    manual_aim_angle = 0;
+    selected_system = ESystem::SYS_None;
 
     setFactionId(1);
 
@@ -263,6 +293,11 @@ PlayerSpaceship::PlayerSpaceship()
     registerMemberReplication(&linked_science_probe_id);
     registerMemberReplication(&control_code);
     registerMemberReplication(&custom_functions);
+    registerMemberReplication(&selected_shield_frequency);
+    registerMemberReplication(&selected_weapon);
+    registerMemberReplication(&manual_aim);
+    registerMemberReplication(&manual_aim_angle);
+    registerMemberReplication(&selected_system);
 
     // Determine which stations must provide self-destruct confirmation codes.
     for(int n = 0; n < max_self_destruct_codes; n++)
@@ -1103,6 +1138,108 @@ void PlayerSpaceship::onReceiveClientCommand(int32_t client_id, sf::Packet& pack
             packet >> target_id;
         }
         break;
+    case CMD_PREVIOUS_TARGET:
+        {
+            sf::Vector2f playerPosition = this->getPosition();
+            sf::Vector2f targetPosition = playerPosition;
+            sf::Vector2f targetVector = sf::Vector2f(1, 1);
+            float targetAngle = 90;
+            float smallestAngle = 360;
+            int32_t newTargetId = target_id;
+
+            // If player has current target, use it's values
+            if (target_id != -1)
+            {
+                targetPosition = this->getTarget()->getPosition();
+                targetVector = targetPosition - playerPosition;
+                targetAngle = sf::vector2ToAngle(targetVector);
+            }
+
+            // Get all possible targets on the radar range
+            PVector<Collisionable> targetCandidates = CollisionManager::queryArea(
+                playerPosition - sf::Vector2f(5000, 5000), playerPosition + sf::Vector2f(5000, 5000));
+
+            foreach(Collisionable, obj, targetCandidates)
+            {
+                P<SpaceObject> targetCandidate = obj;
+
+                if (targetCandidate &&
+                    targetCandidate != this &&
+                    targetCandidate->getMultiplayerId() != target_id &&
+                    targetCandidate->canBeTargetedBy(this))
+                {
+                    sf::Vector2f candidatePosition = targetCandidate->getPosition();
+                    sf::Vector2f candidateVector = candidatePosition - playerPosition;
+                    float candidateAngle = sf::vector2ToAngle(candidateVector);
+
+                    float angleDifference = targetAngle - candidateAngle;
+
+                    if (angleDifference < 0)
+                    {
+                        angleDifference += 360;
+                    }
+
+                    if (angleDifference < smallestAngle) {
+                        smallestAngle = angleDifference;
+                        newTargetId = targetCandidate->getMultiplayerId();
+                    }
+                }
+            }
+
+            target_id = newTargetId;
+        }
+        break;
+    case CMD_NEXT_TARGET:
+        {
+            sf::Vector2f playerPosition = this->getPosition();
+            sf::Vector2f targetPosition = playerPosition;
+            sf::Vector2f targetVector = sf::Vector2f(1, 1);
+            float targetAngle = 90;
+            float largestAngle = 0;
+            int32_t newTargetId = target_id;
+
+            // If player has current target, use it's values
+            if (target_id != -1)
+            {
+                targetPosition = this->getTarget()->getPosition();
+                targetVector = targetPosition - playerPosition;
+                targetAngle = sf::vector2ToAngle(targetVector);
+            }
+
+            // Get all possible targets on the radar range
+            PVector<Collisionable> targetCandidates = CollisionManager::queryArea(
+                playerPosition - sf::Vector2f(5000, 5000), playerPosition + sf::Vector2f(5000, 5000));
+
+            foreach(Collisionable, obj, targetCandidates)
+            {
+                P<SpaceObject> targetCandidate = obj;
+
+                if (targetCandidate &&
+                    targetCandidate != this &&
+                    targetCandidate->getMultiplayerId() != target_id &&
+                    targetCandidate->canBeTargetedBy(this))
+                {
+                    sf::Vector2f candidatePosition = targetCandidate->getPosition();
+                    sf::Vector2f candidateVector = candidatePosition - playerPosition;
+                    float candidateAngle = sf::vector2ToAngle(candidateVector);
+
+                    float angleDifference = targetAngle - candidateAngle;
+
+                    if (angleDifference < 0)
+                    {
+                        angleDifference += 360;
+                    }
+
+                    if (angleDifference > largestAngle) {
+                        largestAngle = angleDifference;
+                        newTargetId = targetCandidate->getMultiplayerId();
+                    }
+                }
+            }
+
+            target_id = newTargetId;
+        }
+        break;
     case CMD_LOAD_TUBE:
         {
             int8_t tube_nr;
@@ -1134,6 +1271,22 @@ void PlayerSpaceship::onReceiveClientCommand(int32_t client_id, sf::Packet& pack
                 weapon_tube[tube_nr].fire(missile_target_angle);
         }
         break;
+    case CMD_SELECT_WEAPON:
+        {
+            EMissileWeapons weapon_type;
+            packet >> weapon_type;
+
+            selected_weapon = weapon_type;
+        }
+        break;
+    case CMD_SELECT_SYSTEM:
+        {
+            ESystem system_type;
+            packet >> system_type;
+
+            selected_system = system_type;
+        }
+        break;
     case CMD_SET_SHIELDS:
         {
             bool active;
@@ -1151,6 +1304,15 @@ void PlayerSpaceship::onReceiveClientCommand(int32_t client_id, sf::Packet& pack
                     playSoundOnMainScreen("shield_down.wav");
                 }
             }
+        }
+        break;
+    case CMD_CALIBRATE_SHIELDS:
+        if (shield_calibration_delay <= 0.0 &&
+            shield_frequency != selected_shield_frequency)
+        {
+            shield_frequency = selected_shield_frequency;
+            shield_calibration_delay = shield_calibration_time;
+            shields_active = false;
         }
         break;
     case CMD_SET_MAIN_SCREEN_SETTING:
@@ -1385,6 +1547,34 @@ void PlayerSpaceship::onReceiveClientCommand(int32_t client_id, sf::Packet& pack
             }
         }
         break;
+    case CMD_SET_SHIELD_FREQUENCY_SELECTION:
+        if (shield_calibration_delay <= 0.0) // TODO: Is it ok to change target while calibrating? I'd say no.
+        {
+            int32_t new_frequency;
+            packet >> new_frequency;
+
+            if (new_frequency < 0)
+                selected_shield_frequency = 0;
+            if (new_frequency > SpaceShip::max_frequency)
+                selected_shield_frequency = SpaceShip::max_frequency;
+            else
+                selected_shield_frequency = new_frequency;
+        }
+        break;
+    case CMD_SET_NEXT_SHIELD_FREQUENCY_SELECTION:
+        if (shield_calibration_delay <= 0.0) // TODO: Is it ok to change target while calibrating? I'd say no.
+        {
+            if (selected_shield_frequency != SpaceShip::max_frequency)
+                ++selected_shield_frequency;
+        }
+        break;
+    case CMD_SET_PREVIOUS_SHIELD_FREQUENCY_SELECTION:
+        if (shield_calibration_delay <= 0.0) // TODO: Is it ok to change target while calibrating? I'd say no.
+        {
+            if (selected_shield_frequency != 0)
+                --selected_shield_frequency;
+        }
+        break;
     case CMD_ADD_WAYPOINT:
         {
             sf::Vector2f position;
@@ -1449,6 +1639,12 @@ void PlayerSpaceship::onReceiveClientCommand(int32_t client_id, sf::Packet& pack
             packet >> index >> code;
             if (index >= 0 && index < max_self_destruct_codes && self_destruct_code[index] == code)
                 self_destruct_code_confirmed[index] = true;
+        }
+        break;
+    case CMD_COFIRM_ALL_SELF_DESTRUCT:
+        {
+            for(int i = 0; i<max_self_destruct_codes; i++)
+                self_destruct_code_confirmed[i] = true;
         }
         break;
     case CMD_COMBAT_MANEUVER_BOOST:
@@ -1520,6 +1716,17 @@ void PlayerSpaceship::onReceiveClientCommand(int32_t client_id, sf::Packet& pack
             }
         }
         break;
+    case CMD_SET_AIM_LOCK:
+        {
+            packet >> manual_aim;
+            manual_aim = !manual_aim;
+        }
+        break;
+    case CMD_SET_AIM_ANGLE:
+        {
+            packet >> manual_aim_angle;
+        }
+        break;
     }
 }
 
@@ -1562,8 +1769,26 @@ void PlayerSpaceship::commandSetTarget(P<SpaceObject> target)
     sendClientCommand(packet);
 }
 
+void PlayerSpaceship::commandNextTarget()
+{
+    sf::Packet packet;
+    packet << CMD_NEXT_TARGET;
+    sendClientCommand(packet);
+}
+
+void PlayerSpaceship::commandPreviousTarget()
+{
+    sf::Packet packet;
+    packet << CMD_PREVIOUS_TARGET;
+    sendClientCommand(packet);
+}
+
 void PlayerSpaceship::commandLoadTube(int8_t tubeNumber, EMissileWeapons missileType)
 {
+    // Check that tube is valid
+    if (tubeNumber < 0 || tubeNumber >= getWeaponTubeCount())
+        return;
+
     sf::Packet packet;
     packet << CMD_LOAD_TUBE << tubeNumber << missileType;
     sendClientCommand(packet);
@@ -1571,6 +1796,10 @@ void PlayerSpaceship::commandLoadTube(int8_t tubeNumber, EMissileWeapons missile
 
 void PlayerSpaceship::commandUnloadTube(int8_t tubeNumber)
 {
+    // Check that tube is valid
+    if (tubeNumber < 0 || tubeNumber >= getWeaponTubeCount())
+        return;
+
     sf::Packet packet;
     packet << CMD_UNLOAD_TUBE << tubeNumber;
     sendClientCommand(packet);
@@ -1578,6 +1807,10 @@ void PlayerSpaceship::commandUnloadTube(int8_t tubeNumber)
 
 void PlayerSpaceship::commandFireTube(int8_t tubeNumber, float missile_target_angle)
 {
+    // Check that tube is valid
+    if (tubeNumber < 0 || tubeNumber >= getWeaponTubeCount())
+        return;
+
     sf::Packet packet;
     packet << CMD_FIRE_TUBE << tubeNumber << missile_target_angle;
     sendClientCommand(packet);
@@ -1586,22 +1819,48 @@ void PlayerSpaceship::commandFireTube(int8_t tubeNumber, float missile_target_an
 void PlayerSpaceship::commandFireTubeAtTarget(int8_t tubeNumber, P<SpaceObject> target)
 {
   float targetAngle = 0.0;
-  
+
   if (!target || tubeNumber < 0 || tubeNumber >= getWeaponTubeCount())
     return;
-  
+
   targetAngle = weapon_tube[tubeNumber].calculateFiringSolution(target);
-  
+
   if (targetAngle == std::numeric_limits<float>::infinity())
       targetAngle = getRotation() + weapon_tube[tubeNumber].getDirection();
-    
+
   commandFireTube(tubeNumber, targetAngle);
+}
+
+void PlayerSpaceship::commandFireTubeAtCurrentTarget(int8_t tubeNumber)
+{
+    // Check that tube is valid
+    if (tubeNumber < 0 || tubeNumber >= getWeaponTubeCount())
+        return;
+
+    float target_angle = my_spaceship->manual_aim_angle;
+
+    if (!my_spaceship->manual_aim)
+    {
+        target_angle = my_spaceship->weapon_tube[tubeNumber].calculateFiringSolution(my_spaceship->getTarget());
+
+        if (target_angle == std::numeric_limits<float>::infinity())
+            target_angle = my_spaceship->getRotation() + my_spaceship->weapon_tube[tubeNumber].getDirection();
+    }
+
+    my_spaceship->commandFireTube(tubeNumber, target_angle);
 }
 
 void PlayerSpaceship::commandSetShields(bool enabled)
 {
     sf::Packet packet;
     packet << CMD_SET_SHIELDS << enabled;
+    sendClientCommand(packet);
+}
+
+void PlayerSpaceship::commandCalibrateShields()
+{
+    sf::Packet packet;
+    packet << CMD_CALIBRATE_SHIELDS;
     sendClientCommand(packet);
 }
 
@@ -1700,6 +1959,20 @@ void PlayerSpaceship::commandSendCommPlayer(string message)
     sendClientCommand(packet);
 }
 
+void PlayerSpaceship::commandSelectWeapon(EMissileWeapons weapon_type)
+{
+    sf::Packet packet;
+    packet << CMD_SELECT_WEAPON << weapon_type;
+    sendClientCommand(packet);
+}
+
+void PlayerSpaceship::commandSelectSystem(ESystem system_type)
+{
+    sf::Packet packet;
+    packet << CMD_SELECT_SYSTEM << system_type;
+    sendClientCommand(packet);
+}
+
 void PlayerSpaceship::commandSetAutoRepair(bool enabled)
 {
     sf::Packet packet;
@@ -1725,6 +1998,27 @@ void PlayerSpaceship::commandSetShieldFrequency(int32_t frequency)
 {
     sf::Packet packet;
     packet << CMD_SET_SHIELD_FREQUENCY << frequency;
+    sendClientCommand(packet);
+}
+
+void PlayerSpaceship::commandSetShieldFrequencySelection(int32_t frequency)
+{
+    sf::Packet packet;
+    packet << CMD_SET_SHIELD_FREQUENCY_SELECTION << frequency;
+    sendClientCommand(packet);
+}
+
+void PlayerSpaceship::commandSetNextShieldFrequencySelection()
+{
+    sf::Packet packet;
+    packet << CMD_SET_NEXT_SHIELD_FREQUENCY_SELECTION;
+    sendClientCommand(packet);
+}
+
+void PlayerSpaceship::commandSetPreviousShieldFrequencySelection()
+{
+    sf::Packet packet;
+    packet << CMD_SET_PREVIOUS_SHIELD_FREQUENCY_SELECTION;
     sendClientCommand(packet);
 }
 
@@ -1767,6 +2061,13 @@ void PlayerSpaceship::commandConfirmDestructCode(int8_t index, uint32_t code)
 {
     sf::Packet packet;
     packet << CMD_CONFIRM_SELF_DESTRUCT << index << code;
+    sendClientCommand(packet);
+}
+
+void PlayerSpaceship::commandConfirmSelfDestruct()
+{
+    sf::Packet packet;
+    packet << CMD_COFIRM_ALL_SELF_DESTRUCT;
     sendClientCommand(packet);
 }
 
@@ -1835,6 +2136,20 @@ void PlayerSpaceship::commandCustomFunction(string name)
 void PlayerSpaceship::commandSetScienceLink(int32_t id){
     sf::Packet packet;
     packet << CMD_SET_SCIENCE_LINK << id;
+    sendClientCommand(packet);
+}
+
+void PlayerSpaceship::commandSetAimLock(bool manual_aim)
+{
+    sf::Packet packet;
+    packet << CMD_SET_AIM_LOCK << manual_aim;
+    sendClientCommand(packet);
+}
+
+void PlayerSpaceship::commandSetAimAngle(float manual_aim_angle)
+{
+    sf::Packet packet;
+    packet << CMD_SET_AIM_ANGLE << manual_aim_angle;
     sendClientCommand(packet);
 }
 

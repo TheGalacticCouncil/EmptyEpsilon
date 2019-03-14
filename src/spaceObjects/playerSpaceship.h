@@ -52,7 +52,7 @@ public:
     constexpr static int max_self_destruct_codes = 3;
     // Subsystem effectiveness base rates
     static float system_power_user_factor[];
-    
+
     constexpr static int16_t CMD_PLAY_CLIENT_SOUND = 0x0001;
 
     // Content of a line in the ship's log
@@ -69,7 +69,7 @@ public:
 
         bool operator!=(const ShipLogEntry& e) { return prefix != e.prefix || text != e.text || color != e.color; }
     };
-    
+
     class CustomShipFunction
     {
     public:
@@ -84,7 +84,7 @@ public:
         string caption;
         ECrewPosition crew_position;
         ScriptSimpleCallback callback;
-        
+
         bool operator!=(const CustomShipFunction& csf) { return type != csf.type || name != csf.name || caption != csf.caption || crew_position != csf.crew_position; }
     };
 
@@ -124,12 +124,12 @@ private:
     CommsScriptInterface comms_script_interface; // Server only
     // Ship's log container
     std::vector<ShipLogEntry> ships_log;
-    
+
 public:
     std::vector<CustomShipFunction> custom_functions;
 
     std::vector<sf::Vector2f> waypoints;
-    
+
     // Scan probe capacity
     int max_scan_probes;
     int scan_probe_stock;
@@ -183,7 +183,7 @@ public:
     void setEnergyLevelMax(float amount) { max_energy_level = std::max(0.0f, amount); energy_level = std::min(energy_level, max_energy_level); }
     float getEnergyLevel() { return energy_level; }
     float getEnergyLevelMax() { return max_energy_level; }
-    
+
     void setScanProbeCount(int amount) { scan_probe_stock = std::max(0, std::min(amount, max_scan_probes)); }
     int getScanProbeCount() { return scan_probe_stock; }
     void setMaxScanProbeCount(int amount) { max_scan_probes = std::max(0, amount); scan_probe_stock = std::min(scan_probe_stock, max_scan_probes); }
@@ -204,12 +204,16 @@ public:
     void commandWarp(int8_t target);
     void commandJump(float distance);
     void commandSetTarget(P<SpaceObject> target);
+    void commandNextTarget();
+    void commandPreviousTarget();
     void commandSetScienceLink(int32_t id);
     void commandLoadTube(int8_t tubeNumber, EMissileWeapons missileType);
     void commandUnloadTube(int8_t tubeNumber);
-    void commandFireTube(int8_t tubeNumber, float missile_target_angle);    
+    void commandFireTube(int8_t tubeNumber, float missile_target_angle);
     void commandFireTubeAtTarget(int8_t tubeNumber, P<SpaceObject> target);
+    void commandFireTubeAtCurrentTarget(int8_t tubeNumber);
     void commandSetShields(bool enabled);
+    void commandCalibrateShields();
     void commandMainScreenSetting(EMainScreenSetting mainScreen);
     void commandMainScreenOverlay(EMainScreenOverlay mainScreen);
     void commandScan(P<SpaceObject> object);
@@ -223,16 +227,22 @@ public:
     void commandAnswerCommHail(bool awnser);
     void commandSendComm(uint8_t index);
     void commandSendCommPlayer(string message);
+    void commandSelectWeapon(EMissileWeapons weapon_type);
+    void commandSelectSystem(ESystem system_type);
     void commandSetAutoRepair(bool enabled);
     void commandSetBeamFrequency(int32_t frequency);
     void commandSetBeamSystemTarget(ESystem system);
     void commandSetShieldFrequency(int32_t frequency);
+    void commandSetShieldFrequencySelection(int32_t frequency);
+    void commandSetNextShieldFrequencySelection();
+    void commandSetPreviousShieldFrequencySelection();
     void commandAddWaypoint(sf::Vector2f position);
     void commandRemoveWaypoint(int32_t index);
     void commandMoveWaypoint(int32_t index, sf::Vector2f position);
     void commandActivateSelfDestruct();
     void commandCancelSelfDestruct();
     void commandConfirmDestructCode(int8_t index, uint32_t code);
+    void commandConfirmSelfDestruct();
     void commandCombatManeuverBoost(float amount);
     void commandCombatManeuverStrafe(float strafe);
     void commandLaunchProbe(sf::Vector2f target_position);
@@ -241,6 +251,8 @@ public:
     void commandSetAlertLevel(EAlertLevel level);
     void commandHackingFinished(P<SpaceObject> target, string target_system);
     void commandCustomFunction(string name);
+    void commandSetAimLock(bool manual_aim);
+    void commandSetAimAngle(float manual_aim_angle);
 
     virtual void onReceiveServerCommand(sf::Packet& packet) override;
 
@@ -262,7 +274,7 @@ public:
     virtual void update(float delta) override;
     virtual bool useEnergy(float amount) override;
     virtual void addHeat(ESystem system, float amount) override;
-    
+
     // Call on the server to play a sound on the main screen.
     void playSoundOnMainScreen(string sound_name);
 

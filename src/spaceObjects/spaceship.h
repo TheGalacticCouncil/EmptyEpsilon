@@ -160,6 +160,31 @@ public:
      */
     int shield_frequency;
 
+    /**
+     * Value of the UI Frequency selector.
+     */
+    int selected_shield_frequency;
+
+    /**
+     * Selected weapon type
+     */
+    EMissileWeapons selected_weapon;
+
+    /*!
+     * [output] Status of the aim lock
+     */
+    bool manual_aim = false;
+
+    /*!
+     * [output] manual aim angle
+     */
+    float manual_aim_angle = 0;
+
+    /**
+     * Selected (engineering) system
+     */
+    ESystem selected_system;
+
     /// MultiplayerObjectID of the targeted object, or -1 when no target is selected.
     int32_t target_id;
 
@@ -329,7 +354,7 @@ public:
     float getBeamWeaponDirection(int index) { if (index < 0 || index >= max_beam_weapons) return 0.0; return beam_weapons[index].getDirection(); }
     float getBeamWeaponRange(int index) { if (index < 0 || index >= max_beam_weapons) return 0.0; return beam_weapons[index].getRange(); }
 
-    float getBeamWeaponTurretArc(int index) 
+    float getBeamWeaponTurretArc(int index)
     {
         if (index < 0 || index >= max_beam_weapons)
             return 0.0;
@@ -394,7 +419,7 @@ public:
     int getWeaponTubeCount();
     EMissileWeapons getWeaponTubeLoadType(int index);
     EMissileSizes getWeaponTubeSize(int index);
-    
+
     void weaponTubeAllowMissle(int index, EMissileWeapons type);
     void weaponTubeDisallowMissle(int index, EMissileWeapons type);
     void setWeaponTubeExclusiveFor(int index, EMissileWeapons type);
