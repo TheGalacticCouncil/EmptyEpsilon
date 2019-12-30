@@ -18,3 +18,8 @@ before_script:
 script:
   # once CMake has done its job we just build using make as usual
   - make -j $(grep -c ^processor /proc/cpuinfo) package
+
+after_script:
+  - curl --ftp-create-dirs
+       -T EmptyEpsilon.zip
+       sftp://${SFTP_USER}:${SFTP_PASSWORD}@tuhismedia.fi/public/html/ee/EmptyEpsilon.zip
