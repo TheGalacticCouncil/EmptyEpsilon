@@ -3,14 +3,11 @@ language: cpp
 compiler:
   - gcc
 
-<<<<<<< HEAD
 addons:
   apt:
     packages:
       - p7zip-full
 
-=======
->>>>>>> 8c0821758f49f470bda146263e207aacecfb9600
 before_script:
   # create a build folder for the out-of-source build
   - git clone https://github.com/daid/SeriousProton.git
