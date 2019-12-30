@@ -1,0 +1,15 @@
+language: cpp
+
+compiler:
+  - gcc
+
+before_script:
+  # create a build folder for the out-of-source build
+  - git clone https://github.com/daid/SeriousProton.git
+  - mkdir _build_win32
+  - cd _build_win32
+  - cmake .. -DCMAKE_TOOLCHAIN_FILE=../cmake/mingw.toolchain -DSERIOUS_PROTON_DIR=../SeriousProton -DCMAKE_MAKE_PROGRAM=make
+
+script:
+  # once CMake has done its job we just build using make as usual
+  - make -j $(grep -c ^processor /proc/cpuinfo) package
