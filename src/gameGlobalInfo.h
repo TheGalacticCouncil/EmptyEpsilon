@@ -11,13 +11,6 @@ class GameStateLogger;
 class GameGlobalInfo;
 extern P<GameGlobalInfo> gameGlobalInfo;
 
-class NebulaInfo
-{
-public:
-    sf::Vector3f vector;
-    string textureName;
-};
-
 enum EPlayerWarpJumpDrive
 {
     PWJ_ShipDefault = 0,
@@ -32,7 +25,7 @@ enum EScanningComplexity
     SC_None = 0,
     SC_Simple,
     SC_Normal,
-    SC_Advanced
+    SC_Advanced,
 };
 enum EHackingGames
 {
@@ -49,10 +42,6 @@ public:
      * \brief Maximum number of player ships.
      */
     static const int max_player_ships = 32;
-    /*!
-     * \brief Maximum number of visual background nebulas.
-     */
-    static const int max_nebulas = 32;
 private:
     int victory_faction;
     int32_t playerShipId[max_player_ships];
@@ -68,20 +57,18 @@ public:
     string banner_string;
 
     std::vector<float> reputation_points;
-    NebulaInfo nebula_info[max_nebulas];
     EPlayerWarpJumpDrive player_warp_jump_drive_setting;
     EScanningComplexity scanning_complexity;
     //Hacking difficulty ranges from 0 to 3
     int hacking_difficulty;
     EHackingGames hacking_games;
-    /*!
-     * \brief Range of the science radar.
-     */
-    float long_range_radar_range;
     bool use_beam_shield_frequencies;
     bool use_system_damage;
     bool allow_main_screen_tactical_radar;
     bool allow_main_screen_long_range_radar;
+    string gm_control_code;
+    float elapsed_time;
+    string scenario;
     string variation = "None";
 
     //List of script functions that can be called from the GM interface (Server only!)
@@ -90,7 +77,14 @@ public:
     //When active, all comms request goto the GM as chat, and normal scripted converstations are disabled. This does not disallow player<->player ship comms.
     bool intercept_all_comms_to_gm;
 
+    //Callback called when a new player ship is created on the ship selection screen.
+    ScriptSimpleCallback on_new_player_ship;
+    bool allow_new_player_ships = true;
+
+    std::function<void(sf::Vector2f)> on_gm_click;
+
     GameGlobalInfo();
+    virtual ~GameGlobalInfo();
 
     P<PlayerSpaceship> getPlayerShip(int index);
     void setPlayerShip(int index, P<PlayerSpaceship> ship);
@@ -123,5 +117,9 @@ string playerWarpJumpDriveToString(EPlayerWarpJumpDrive player_warp_jump_drive);
 string getSectorName(sf::Vector2f position);
 
 REGISTER_MULTIPLAYER_ENUM(EScanningComplexity);
+REGISTER_MULTIPLAYER_ENUM(EHackingGames);
+
+template<> int convert<EScanningComplexity>::returnType(lua_State* L, EScanningComplexity complexity);
+template<> int convert<EHackingGames>::returnType(lua_State* L, EHackingGames games);
 
 #endif//GAME_GLOBAL_INFO_H
