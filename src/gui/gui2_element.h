@@ -43,20 +43,19 @@ public:
     constexpr static float GuiSizeMatchWidth = -1.0;
     constexpr static float GuiSizeMax = -2.0;
 
-    GuiElement(GuiContainer* owner, const string& id);
+    GuiElement(GuiContainer* owner, string id);
     virtual ~GuiElement();
 
-    virtual void onUpdate() {}
     virtual void onDraw(sf::RenderTarget& window) {}
     virtual bool onMouseDown(sf::Vector2f position);
     virtual void onMouseDrag(sf::Vector2f position);
     virtual void onMouseUp(sf::Vector2f position);
     virtual bool onKey(sf::Event::KeyEvent key, int unicode);
     virtual void onHotkey(const HotkeyResult& key);
-    virtual bool onJoystickAxis(const AxisAction& axisAction);
-    virtual void onFocusGained() {}
-    virtual void onFocusLost() {}
-
+    virtual bool onJoystickXYMove(sf::Vector2f position);
+    virtual bool onJoystickZMove(float position);
+    virtual bool onJoystickRMove(float position);
+    
     GuiElement* setSize(sf::Vector2f size);
     GuiElement* setSize(float x, float y);
     sf::Vector2f getSize() const;
@@ -85,23 +84,16 @@ public:
 
     GuiContainer* getOwner();
     GuiContainer* getTopLevelContainer();
-
+    
     //Have this GuiElement destroyed, but at a safe point&time in the code. (handled by the container)
     void destroy();
-
-    bool isDestroyed();
-
+    
     friend class GuiContainer;
     friend class GuiCanvas;
 private:
     void updateRect(sf::FloatRect parent_rect);
 protected:
-    /*! Setup (and creates) a RenderTexture with a view that fits this element.
-    * \param texture inout The RT target to update
-    * \return Whether the texture was successfully created/updated.
-    */
-    [[nodiscard]]
-    bool adjustRenderTexture(sf::RenderTexture& texture);
+    void adjustRenderTexture(sf::RenderTexture& texture);
     void drawRenderTexture(sf::RenderTexture& texture, sf::RenderTarget& window, sf::Color color = sf::Color::White, const sf::RenderStates& states = sf::RenderStates::Default);
 
     /*!
@@ -111,7 +103,7 @@ protected:
      * \param text_size Size of the text
      * \param color Color of text
      */
-    void drawText(sf::RenderTarget& window, sf::FloatRect rect, const string& text, EGuiAlign align = ATopLeft, float text_size = 30, sf::Font* font = main_font, sf::Color color=sf::Color::White);
+    void drawText(sf::RenderTarget& window, sf::FloatRect rect, string text, EGuiAlign align = ATopLeft, float text_size = 30, sf::Font* font = main_font, sf::Color color=sf::Color::White);
 
     /*!
      * Draw a certain text on the screen with vertical orientation
@@ -120,16 +112,16 @@ protected:
      * \param text_size Size of the text
      * \param color Color of text
      */
-    void drawVerticalText(sf::RenderTarget& window, sf::FloatRect rect, const string& text, EGuiAlign align = ATopLeft, float text_size = 30, sf::Font* font = main_font, sf::Color color=sf::Color::White);
+    void drawVerticalText(sf::RenderTarget& window, sf::FloatRect rect, string text, EGuiAlign align = ATopLeft, float text_size = 30, sf::Font* font = main_font, sf::Color color=sf::Color::White);
 
-    void draw9Cut(sf::RenderTarget& window, sf::FloatRect rect, const string& texture, sf::Color color=sf::Color::White, float width_factor = 1.0);
-    void draw9CutV(sf::RenderTarget& window, sf::FloatRect rect, const string& texture, sf::Color color=sf::Color::White, float height_factor = 1.0);
-
-    void drawStretched(sf::RenderTarget& window, sf::FloatRect rect, const string& texture, sf::Color color=sf::Color::White);
-    void drawStretchedH(sf::RenderTarget& window, sf::FloatRect rect, const string& texture, sf::Color color=sf::Color::White);
-    void drawStretchedV(sf::RenderTarget& window, sf::FloatRect rect, const string& texture, sf::Color color=sf::Color::White);
-    void drawStretchedHV(sf::RenderTarget& window, sf::FloatRect rect, float corner_size, const string& texture, sf::Color color=sf::Color::White);
-
+    void draw9Cut(sf::RenderTarget& window, sf::FloatRect rect, string texture, sf::Color color=sf::Color::White, float width_factor = 1.0);
+    void draw9CutV(sf::RenderTarget& window, sf::FloatRect rect, string texture, sf::Color color=sf::Color::White, float height_factor = 1.0);
+    
+    void drawStretched(sf::RenderTarget& window, sf::FloatRect rect, string texture, sf::Color color=sf::Color::White);
+    void drawStretchedH(sf::RenderTarget& window, sf::FloatRect rect, string texture, sf::Color color=sf::Color::White);
+    void drawStretchedV(sf::RenderTarget& window, sf::FloatRect rect, string texture, sf::Color color=sf::Color::White);
+    void drawStretchedHV(sf::RenderTarget& window, sf::FloatRect rect, float corner_size, string texture, sf::Color color=sf::Color::White);
+    
     void drawArrow(sf::RenderTarget& window, sf::FloatRect rect, sf::Color=sf::Color::White, float rotation=0);
 
     sf::Color selectColor(ColorSet& color_set) const;
@@ -140,7 +132,7 @@ protected:
         string text;
         int line_count;
     };
-    LineWrapResult doLineWrap(const string& text, float font_size, float width);
+    LineWrapResult doLineWrap(string text, float font_size, float width);
 };
 
 #endif//GUI2_ELEMENT_H

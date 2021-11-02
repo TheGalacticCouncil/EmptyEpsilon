@@ -7,12 +7,10 @@ class EpsilonServer : public GameServer
 {
 public:
     EpsilonServer();
-    virtual ~EpsilonServer() = default;
+    virtual ~EpsilonServer();
 
-    virtual void onNewClient(int32_t client_id) override;
-    virtual void onDisconnectClient(int32_t client_id) override;
-
-    virtual std::unordered_set<int32_t> onVoiceChat(int32_t client_id, int32_t target_identifier) override;
+    virtual void onNewClient(int32_t client_id);
+    virtual void onDisconnectClient(int32_t client_id);
 };
 
 void disconnectFromServer();

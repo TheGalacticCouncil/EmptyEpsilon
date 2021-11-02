@@ -32,18 +32,18 @@ if(NOT SFML_ROOT)
         file(MAKE_DIRECTORY "${WIN32_BASE}/openal_build")
 # TOFIX: DXSDK_DIR is set to a hardcoded path, as openal cannot seem to find dsound.h on my linux system.
         execute_process_ex(
-            COMMAND "${CMAKE_COMMAND}" "${WIN32_BASE}/openal-soft-1.19.1"
+            COMMAND "${CMAKE_COMMAND}" "${WIN32_BASE}/openal-soft-1.19.1" "-G" "${CMAKE_GENERATOR}"
+                "-DCMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}"
                 "-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}"
                 "-DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}"
                 "-DCMAKE_SYSTEM_NAME=${CMAKE_SYSTEM_NAME}"
                 "-DCMAKE_SYSROOT=${CMAKE_SYSROOT}"
                 "-DCMAKE_INSTALL_PREFIX=${CMAKE_SYSROOT}"
                 "-DCMAKE_BUILD_TYPE=Release"
-                "-DALSOFT_BACKEND_OSS=OFF"
                 "-DDXSDK_DIR=/usr/i686-w64-mingw32"
             WORKING_DIRECTORY "${WIN32_BASE}/openal_build")
         execute_process_ex(
-            COMMAND "make" "-j4" "install"
+            COMMAND "${CMAKE_MAKE_PROGRAM}" "-j4" "install"
             WORKING_DIRECTORY "${WIN32_BASE}/openal_build")
     endif()
 
@@ -54,7 +54,8 @@ if(NOT SFML_ROOT)
     if(NOT IS_DIRECTORY "${CMAKE_SYSROOT}/include/SFML")
         file(MAKE_DIRECTORY "${WIN32_BASE}/SFML_build")
         execute_process_ex(
-            COMMAND "${CMAKE_COMMAND}" "${WIN32_BASE}/SFML-2.5.1"
+            COMMAND "${CMAKE_COMMAND}" "${WIN32_BASE}/SFML-2.5.1" "-G" "${CMAKE_GENERATOR}"
+                "-DCMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}"
                 "-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}"
                 "-DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}"
                 "-DCMAKE_SYSTEM_NAME=${CMAKE_SYSTEM_NAME}"
@@ -65,7 +66,7 @@ if(NOT SFML_ROOT)
                 "-DOPENAL_LIBRARY=${CMAKE_SYSROOT}/bin/OpenAL32.dll"
             WORKING_DIRECTORY "${WIN32_BASE}/SFML_build")
         execute_process_ex(
-            COMMAND "make" "install"
+            COMMAND "${CMAKE_MAKE_PROGRAM}" "install"
             WORKING_DIRECTORY "${WIN32_BASE}/SFML_build")
     endif()
     

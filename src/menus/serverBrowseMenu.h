@@ -3,8 +3,6 @@
 
 #include "gui/gui2_canvas.h"
 
-#include <optional>
-
 class GuiTextEntry;
 class GuiButton;
 class GuiListbox;
@@ -23,10 +21,10 @@ private:
     GuiButton* connect_button;
     GuiListbox* server_list;
     GuiSelector* lan_internet_selector;
-
+    
     P<ServerScanner> scanner;
 public:
-    ServerBrowserMenu(SearchSource source, std::optional<GameClient::DisconnectReason> last_attempt = {});
+    ServerBrowserMenu(SearchSource source);
     virtual ~ServerBrowserMenu();
 };
 

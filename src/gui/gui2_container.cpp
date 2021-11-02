@@ -3,6 +3,10 @@
 #include "gui2_canvas.h"
 #include "input.h"
 
+GuiContainer::GuiContainer()
+{
+}
+
 GuiContainer::~GuiContainer()
 {
     for(GuiElement* element : elements)
@@ -27,15 +31,13 @@ void GuiContainer::drawElements(sf::FloatRect parent_rect, sf::RenderTarget& win
 
             //Delete it from our list.
             it = elements.erase(it);
-
+            
             // Free up the memory used by the element.
             element->owner = nullptr;
             delete element;
         }else{
             element->updateRect(parent_rect);
             element->hover = element->rect.contains(mouse_position);
-            element->onUpdate();
-
             if (element->visible)
             {
                 element->onDraw(window);
@@ -74,7 +76,7 @@ GuiElement* GuiContainer::getClickElement(sf::Vector2f mouse_position)
     for(std::list<GuiElement*>::reverse_iterator it = elements.rbegin(); it != elements.rend(); it++)
     {
         GuiElement* element = *it;
-
+        
         if (element->hover && element->visible && element->enabled)
         {
             GuiElement* clicked = element->getClickElement(mouse_position);
@@ -102,16 +104,48 @@ void GuiContainer::forwardKeypressToElements(const HotkeyResult& key)
     }
 }
 
-bool GuiContainer::forwardJoystickAxisToElements(const AxisAction& axisAction)
+bool GuiContainer::forwardJoystickXYMoveToElements(sf::Vector2f position)
 {
     for(GuiElement* element : elements)
     {
         if (element->isVisible())
         {
             if (element->isEnabled())
-                if (element->onJoystickAxis(axisAction))
+                if (element->onJoystickXYMove(position))
                     return true;
-            if (element->forwardJoystickAxisToElements(axisAction))
+            if (element->forwardJoystickXYMoveToElements(position))
+                return true;
+        }
+    }
+    return false;
+}
+
+bool GuiContainer::forwardJoystickZMoveToElements(float position)
+{
+    for(GuiElement* element : elements)
+    {
+        if (element->isVisible())
+        {
+            if (element->isEnabled())
+                if (element->onJoystickZMove(position))
+                    return true;
+            if (element->forwardJoystickZMoveToElements(position))
+                return true;
+        }
+    }
+    return false;
+}
+
+bool GuiContainer::forwardJoystickRMoveToElements(float position)
+{
+    for(GuiElement* element : elements)
+    {
+        if (element->isVisible())
+        {
+            if (element->isEnabled())
+                if (element->onJoystickRMove(position))
+                    return true;
+            if (element->forwardJoystickRMoveToElements(position))
                 return true;
         }
     }

@@ -2,7 +2,6 @@
 #define BEAM_EFFECT_H
 
 #include "spaceObject.h"
-#include "glObjects.h"
 
 class BeamEffect : public SpaceObject, public Updatable
 {
@@ -19,7 +18,6 @@ public:
     string beam_fire_sound;
     float beam_fire_sound_power;
     BeamEffect();
-    virtual ~BeamEffect();
 
 #if FEATURE_3D_RENDERING
     virtual void draw3DTransparent();
@@ -38,8 +36,6 @@ public:
     ///Control Duration of the beam. Default is 1 second
     void setDuration(float duration) {this->lifetime = duration;}
     void setRing(bool ring) {this->fire_ring = ring;}
-protected:
-    bool beam_sound_played;
 };
 
 #endif//BEAM_EFFECT_H

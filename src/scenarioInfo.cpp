@@ -52,7 +52,7 @@ void ScenarioInfo::addKeyValue(string key, string value)
     }
     else if (key.lower() == "author")
     {
-        author = value;
+        type = value;
     }
     else if (key.lower() == "type")
     {

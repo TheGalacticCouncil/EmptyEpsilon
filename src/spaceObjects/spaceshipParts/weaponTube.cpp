@@ -9,7 +9,7 @@
 WeaponTube::WeaponTube()
 {
     parent = nullptr;
-
+    
     load_time = 8.0;
     direction = 0;
     type_allowed_mask = (1 << MW_Count) - 1;
@@ -28,8 +28,7 @@ void WeaponTube::setParent(SpaceShip* parent)
     parent->registerMemberReplication(&load_time);
     parent->registerMemberReplication(&type_allowed_mask);
     parent->registerMemberReplication(&direction);
-    parent->registerMemberReplication(&size);
-
+    
     parent->registerMemberReplication(&type_loaded);
     parent->registerMemberReplication(&state);
     parent->registerMemberReplication(&delay, 0.5);
@@ -68,10 +67,9 @@ void WeaponTube::startLoad(EMissileWeapons type)
         return;
     if (parent->weapon_storage[type] <= 0)
         return;
-
+        
     state = WTS_Loading;
     delay = load_time;
-    parent->forceMemberReplicationUpdate(&delay);
     type_loaded = type;
     parent->weapon_storage[type]--;
 }
@@ -82,7 +80,6 @@ void WeaponTube::startUnload()
     {
         state = WTS_Unloading;
         delay = load_time;
-        parent->forceMemberReplicationUpdate(&delay);
     }
 }
 
@@ -93,7 +90,7 @@ void WeaponTube::fire(float target_angle)
     if (parent->docking_state != DS_NotDocking) return;
     if (parent->current_warp > 0.0) return;
     if (state != WTS_Loaded) return;
-
+    
     if (type_loaded == MW_HVLI)
     {
         fire_count = 5;
@@ -105,6 +102,22 @@ void WeaponTube::fire(float target_angle)
         type_loaded = MW_None;
     }
 }
+
+float WeaponTube::getSizeCategoryModifier()
+{
+    switch(size)
+    {
+        case MS_Small:
+            return 0.5;
+        case MS_Medium:
+            return 1.0;
+        case MS_Large:
+            return 2.0;
+        default:
+            return 1.0;
+    }
+}
+
 
 void WeaponTube::spawnProjectile(float target_angle)
 {
@@ -120,7 +133,7 @@ void WeaponTube::spawnProjectile(float target_angle)
             missile->setPosition(fireLocation);
             missile->setRotation(parent->getRotation() + direction);
             missile->target_angle = target_angle;
-            missile->category_modifier = MissileWeaponData::convertSizeToCategoryModifier(size);
+            missile->category_modifier = getSizeCategoryModifier();
         }
         break;
     case MW_Nuke:
@@ -132,7 +145,7 @@ void WeaponTube::spawnProjectile(float target_angle)
             missile->setPosition(fireLocation);
             missile->setRotation(parent->getRotation() + direction);
             missile->target_angle = target_angle;
-            missile->category_modifier = MissileWeaponData::convertSizeToCategoryModifier(size);
+            missile->category_modifier = getSizeCategoryModifier();
         }
         break;
     case MW_Mine:
@@ -153,7 +166,7 @@ void WeaponTube::spawnProjectile(float target_angle)
             missile->setPosition(fireLocation);
             missile->setRotation(parent->getRotation() + direction);
             missile->target_angle = parent->getRotation() + direction;
-            missile->category_modifier = MissileWeaponData::convertSizeToCategoryModifier(size);
+            missile->category_modifier = getSizeCategoryModifier();
         }
         break;
     case MW_EMP:
@@ -165,7 +178,7 @@ void WeaponTube::spawnProjectile(float target_angle)
             missile->setPosition(fireLocation);
             missile->setRotation(parent->getRotation() + direction);
             missile->target_angle = target_angle;
-            missile->category_modifier = MissileWeaponData::convertSizeToCategoryModifier(size);
+            missile->category_modifier = getSizeCategoryModifier();
         }
         break;
     default:
@@ -228,10 +241,9 @@ void WeaponTube::update(float delta)
             type_loaded = MW_None;
             break;
         case WTS_Firing:
-            if (game_server)
             {
                 spawnProjectile(0);
-
+                
                 fire_count -= 1;
                 if (fire_count > 0)
                 {
@@ -293,13 +305,13 @@ EMissileWeapons WeaponTube::getLoadType()
 string WeaponTube::getTubeName()
 {
     if (std::abs(sf::angleDifference(0.0f, direction)) <= 45)
-        return tr("tube","Front");
+        return "Front";
     if (std::abs(sf::angleDifference(90.0f, direction)) < 45)
-        return tr("tube","Right");
+        return "Right";
     if (std::abs(sf::angleDifference(-90.0f, direction)) < 45)
-        return tr("tube","Left");
+        return "Left";
     if (std::abs(sf::angleDifference(180.0f, direction)) <= 45)
-        return tr("tube","Rear");
+        return "Rear";
     return "?" + string(direction);
 }
 
@@ -310,14 +322,14 @@ float WeaponTube::calculateFiringSolution(P<SpaceObject> target)
     const MissileWeaponData& data = MissileWeaponData::getDataFor(type_loaded);
     if (data.turnrate == 0.0f)  //If the missile cannot turn, we cannot find a firing solution.
         return std::numeric_limits<float>::infinity();
-
+    
     sf::Vector2f target_position = target->getPosition();
     sf::Vector2f target_velocity = target->getVelocity();
     float target_velocity_length = sf::length(target_velocity);
     float missile_angle = sf::vector2ToAngle(target_position - parent->getPosition());
     float turn_radius = ((360.0f / data.turnrate) * data.speed) / (2.0f * M_PI);
     float missile_exit_angle = parent->getRotation() + direction;
-
+    
     for(int iterations=0; iterations<10; iterations++)
     {
         float angle_diff = sf::angleDifference(missile_angle, missile_exit_angle);
@@ -370,3 +382,4 @@ EMissileSizes WeaponTube::getSize()
 {
     return size;
 }
+    

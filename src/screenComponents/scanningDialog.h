@@ -3,7 +3,6 @@
 
 #include "gui/gui2_element.h"
 #include "signalQualityIndicator.h"
-#include "gameGlobalInfo.h"
 
 class GuiPanel;
 class GuiLabel;
@@ -22,7 +21,7 @@ private:
     GuiSignalQualityIndicator* signal_quality;
     GuiSlider* sliders[max_sliders];
     GuiButton* cancel_button;
-
+    
     float target[max_sliders];
     bool locked;
     float lock_start_time;
@@ -30,9 +29,8 @@ private:
 public:
     GuiScanningDialog(GuiContainer* owner, string id);
 
-    virtual void onDraw(sf::RenderTarget& window) override;
-    virtual bool onJoystickAxis(const AxisAction& axisAction) override;
-
+    virtual void onDraw(sf::RenderTarget& window);
+    
     void setupParameters();
     void updateSignal();
 };

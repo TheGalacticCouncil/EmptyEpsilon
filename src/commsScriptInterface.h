@@ -13,11 +13,9 @@ class CommsScriptInterface : public sf::NonCopyable
 public:
     bool openCommChannel(P<PlayerSpaceship> ship, P<SpaceObject> target);
     void commChannelMessage(int32_t message_id);
-
+    
     void setCommsMessage(string message);
     void addCommsReply(string message, ScriptSimpleCallback callback);
-
-    void switchToGM();
 private:
     bool has_message;
     std::vector<ScriptSimpleCallback> reply_callbacks;

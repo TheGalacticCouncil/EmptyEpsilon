@@ -7,13 +7,9 @@
 
 #include "scriptInterface.h"
 
-#include "i18n.h"
-
 /// A mine object. Simple, effective, deadly.
 REGISTER_SCRIPT_SUBCLASS(Mine, SpaceObject)
 {
-  // Get the mine's owner's object.
-  REGISTER_SCRIPT_CLASS_FUNCTION(Mine, getOwner);
   // Set a function that will be called if the mine explodes.
   // First argument is the mine, second argument is the mine's owner/instigator (or nil).
   REGISTER_SCRIPT_CLASS_FUNCTION(Mine, onDestruction);
@@ -30,11 +26,7 @@ Mine::Mine()
     particleTimeout = 0.0;
     setRadarSignatureInfo(0.0, 0.05, 0.0);
 
-    PathPlannerManager::getInstance()->addAvoidObject(this, blastRange * 1.2f);
-}
-
-Mine::~Mine()
-{
+    PathPlannerManager::getInstance()->addAvoidObject(this, trigger_range * 1.2f);
 }
 
 void Mine::draw3D()
@@ -45,7 +37,7 @@ void Mine::draw3DTransparent()
 {
 }
 
-void Mine::drawOnRadar(sf::RenderTarget& window, sf::Vector2f position, float scale, float rotation, bool long_range)
+void Mine::drawOnRadar(sf::RenderTarget& window, sf::Vector2f position, float scale, bool long_range)
 {
     sf::Sprite objectSprite;
     textureManager.setTexture(objectSprite, "RadarBlip.png");
@@ -55,7 +47,7 @@ void Mine::drawOnRadar(sf::RenderTarget& window, sf::Vector2f position, float sc
     window.draw(objectSprite);
 }
 
-void Mine::drawOnGMRadar(sf::RenderTarget& window, sf::Vector2f position, float scale, float rotation, bool long_range)
+void Mine::drawOnGMRadar(sf::RenderTarget& window, sf::Vector2f position, float scale, bool long_range)
 {
     sf::CircleShape hitRadius(trigger_range * scale);
     hitRadius.setOrigin(trigger_range * scale, trigger_range * scale);
@@ -121,16 +113,15 @@ void Mine::explode()
     e->setSize(blastRange);
     e->setPosition(getPosition());
     e->setOnRadar(true);
-    e->setRadarSignatureInfo(0.0, 0.0, 0.2);
 
     if (on_destruction.isSet())
     {
         if (info.instigator)
-        {
-            on_destruction.call<void>(P<Mine>(this), P<SpaceObject>(info.instigator));
-        }else{
-            on_destruction.call<void>(P<Mine>(this));
-        }
+	{
+	    on_destruction.call(P<Mine>(this), P<SpaceObject>(info.instigator));
+	}else{
+            on_destruction.call(P<Mine>(this));
+	}
     }
     destroy();
 }
@@ -138,29 +129,4 @@ void Mine::explode()
 void Mine::onDestruction(ScriptSimpleCallback callback)
 {
     this->on_destruction = callback;
-}
-
-P<SpaceObject> Mine::getOwner()
-{
-    if (game_server)
-    {
-        return owner;
-    }
-
-    LOG(ERROR) << "Mine::getOwner(): owner not replicated to clients.";
-    return nullptr;
-}
-
-std::unordered_map<string, string> Mine::getGMInfo()
-{
-    std::unordered_map<string, string> ret;
-
-    if (owner)
-    {
-        ret[trMark("gm_info", "Owner")] = owner->getCallSign();
-    }
-
-    ret[trMark("gm_info", "Faction")] = getLocaleFaction();
-
-    return ret;
 }

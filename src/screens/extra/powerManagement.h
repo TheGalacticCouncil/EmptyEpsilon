@@ -18,7 +18,6 @@ private:
     float previous_energy_measurement;
     float previous_energy_level;
     float average_energy_delta;
-    ESystem selected_system = SYS_None;
 
     class SystemRow
     {
@@ -33,10 +32,8 @@ private:
     SystemRow systems[SYS_COUNT];
 public:
     PowerManagementScreen(GuiContainer* owner);
-
+    
     void onDraw(sf::RenderTarget& window) override;
-    virtual void onHotkey(const HotkeyResult& key) override;
-    virtual bool onJoystickAxis(const AxisAction& axisAction) override;
 };
 
 #endif//POWER_MANAGEMENT_H

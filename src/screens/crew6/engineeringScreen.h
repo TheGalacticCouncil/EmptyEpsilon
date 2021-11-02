@@ -5,7 +5,6 @@
 #include "shipTemplate.h"
 #include "playerInfo.h"
 
-class GuiSelfDestructButton;
 class GuiKeyValueDisplay;
 class GuiLabel;
 class GuiSlider;
@@ -19,6 +18,7 @@ class GuiProgressSlider;
 class EngineeringScreen : public GuiOverlay
 {
 private:
+    GuiOverlay* background_gradient;
     GuiOverlay* background_crosses;
 
     GuiKeyValueDisplay* energy_display;
@@ -26,7 +26,6 @@ private:
     GuiKeyValueDisplay* front_shield_display;
     GuiKeyValueDisplay* rear_shield_display;
     GuiKeyValueDisplay* coolant_display;
-    GuiSelfDestructButton* self_destruct_button;
     GuiLabel* power_label;
     GuiSlider* power_slider;
     GuiLabel* coolant_label;
@@ -38,8 +37,6 @@ private:
         GuiAutoLayout* layout;
         GuiToggleButton* button;
         GuiProgressbar* damage_bar;
-        GuiImage* damage_icon;
-        GuiProgressbar* health_max_bar;
         GuiLabel* damage_label;
         GuiProgressbar* heat_bar;
         GuiArrow* heat_arrow;
@@ -59,14 +56,11 @@ private:
 
     void addSystemEffect(string key, string value);
     void selectSystem(ESystem system);
-
-    string toNearbyIntString(float value);
 public:
     EngineeringScreen(GuiContainer* owner, ECrewPosition crew_position=engineering);
 
     virtual void onDraw(sf::RenderTarget& window) override;
     virtual void onHotkey(const HotkeyResult& key) override;
-    virtual bool onJoystickAxis(const AxisAction& axisAction) override;
 };
 
 #endif//ENGINEERING_SCREEN_H

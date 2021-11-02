@@ -21,22 +21,19 @@ public:
     float particleTimeout;
 
     Mine();
-    virtual ~Mine();
 
-    virtual void draw3D() override;
-    virtual void draw3DTransparent() override;
-    virtual void drawOnRadar(sf::RenderTarget& window, sf::Vector2f position, float scale, float rotation, bool long_range) override;
-    virtual void drawOnGMRadar(sf::RenderTarget& window, sf::Vector2f position, float scale, float rotation, bool long_range) override;
-    virtual void update(float delta) override;
+    virtual void draw3D();
+    virtual void draw3DTransparent();
+    virtual void drawOnRadar(sf::RenderTarget& window, sf::Vector2f position, float scale, bool long_range);
+    virtual void drawOnGMRadar(sf::RenderTarget& window, sf::Vector2f position, float scale, bool long_range);
+    virtual void update(float delta);
 
-    virtual void collide(Collisionable* target, float force) override;
+    virtual void collide(Collisionable* target, float force);
     void eject();
     void explode();
     void onDestruction(ScriptSimpleCallback callback);
-
-    P<SpaceObject> getOwner();
-    virtual std::unordered_map<string, string> getGMInfo() override;
-    virtual string getExportLine() override { return "Mine():setPosition(" + string(getPosition().x, 0) + ", " + string(getPosition().y, 0) + ")"; }
+    
+    virtual string getExportLine() { return "Mine():setPosition(" + string(getPosition().x, 0) + ", " + string(getPosition().y, 0) + ")"; }
 
 private:
     const MissileWeaponData& data;

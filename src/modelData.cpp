@@ -1,4 +1,3 @@
-#include <GL/glew.h>
 #include <SFML/OpenGL.hpp>
 
 #include "engine.h"
@@ -8,7 +7,6 @@
 #include "modelData.h"
 
 #include "scriptInterface.h"
-#include "glObjects.h"
 
 REGISTER_SCRIPT_CLASS(ModelData)
 {
@@ -31,13 +29,7 @@ REGISTER_SCRIPT_CLASS(ModelData)
 std::unordered_map<string, P<ModelData> > ModelData::data_map;
 
 ModelData::ModelData()
-:
-    loaded(false), mesh(nullptr),
-    texture(nullptr), specular_texture(nullptr), illumination_texture(nullptr),
-#if FEATURE_3D_RENDERING
-    shader_id(ShaderRegistry::Shaders::Count),
-#endif
-scale(1.f), radius(1.f)
+: loaded(false), mesh(nullptr), texture(nullptr), specular_texture(nullptr), illumination_texture(nullptr), shader(nullptr), scale(1.0), radius(1.0)
 {
 }
 
@@ -167,16 +159,16 @@ void ModelData::load()
             specular_texture = textureManager.getTexture(specular_texture_name);
         if (illumination_texture_name != "")
             illumination_texture = textureManager.getTexture(illumination_texture_name);
-#if FEATURE_3D_RENDERING
+
         if (texture && specular_texture && illumination_texture)
-            shader_id = ShaderRegistry::Shaders::ObjectSpecularIllumination;
+            shader = ShaderManager::getShader("objectShaderBSI");
         else if (texture && specular_texture)
-            shader_id = ShaderRegistry::Shaders::ObjectSpecular;
+            shader = ShaderManager::getShader("objectShaderBS");
         else if (texture && illumination_texture)
-            shader_id = ShaderRegistry::Shaders::ObjectIllumination;
+            shader = ShaderManager::getShader("objectShaderBI");
         else
-            shader_id = ShaderRegistry::Shaders::Object;
-#endif
+            shader = ShaderManager::getShader("objectShaderB");
+
         loaded = true;
     }
 }
@@ -193,10 +185,10 @@ P<ModelData> ModelData::getModel(string name)
 
 std::vector<string> ModelData::getModelDataNames()
 {
-    std::vector<string> ret(data_map.size());
-    for(const auto &it : data_map)
+    std::vector<string> ret;
+    for(auto it : data_map)
     {
-        ret.emplace_back(it.first);
+        ret.push_back(it.first);
     }
     std::sort(ret.begin(), ret.end());
     return ret;
@@ -210,37 +202,17 @@ void ModelData::render()
         return;
 
     glPushMatrix();
-    // EE's coordinate flips to a Z-up left hand.
-    // To account for that, flip the model around 180deg.
-    glRotatef(180.f, 0.f, 0.f, 1.f);
+
     glScalef(scale, scale, scale);
     glTranslatef(mesh_offset.x, mesh_offset.y, mesh_offset.z);
-
-    ShaderRegistry::ScopedShader shader(shader_id);
-
-    // Textures
-    glBindTexture(GL_TEXTURE_2D, texture->getNativeHandle());
-
+    shader->setUniform("baseMap", *texture);
     if (specular_texture)
-    {
-        glActiveTexture(GL_TEXTURE0 + ShaderRegistry::textureIndex(ShaderRegistry::Textures::SpecularMap));
-        glBindTexture(GL_TEXTURE_2D, specular_texture->getNativeHandle());
-    }
-
+        shader->setUniform("specularMap", *specular_texture);
     if (illumination_texture)
-    {
-        glActiveTexture(GL_TEXTURE0 + ShaderRegistry::textureIndex(ShaderRegistry::Textures::IlluminationMap));
-        glBindTexture(GL_TEXTURE_2D, illumination_texture->getNativeHandle());
-    }
+        shader->setUniform("illuminationMap", *illumination_texture);
+    sf::Shader::bind(shader);
+    mesh->render();
 
-    // Draw
-    gl::ScopedVertexAttribArray positions(shader.get().attribute(ShaderRegistry::Attributes::Position));
-    gl::ScopedVertexAttribArray texcoords(shader.get().attribute(ShaderRegistry::Attributes::Texcoords));
-    gl::ScopedVertexAttribArray normals(shader.get().attribute(ShaderRegistry::Attributes::Normal));
-    mesh->render(positions.get(), texcoords.get(), normals.get());
-
-    if (specular_texture || illumination_texture)
-        glActiveTexture(GL_TEXTURE0);
     glPopMatrix();
 #endif//FEATURE_3D_RENDERING
 }

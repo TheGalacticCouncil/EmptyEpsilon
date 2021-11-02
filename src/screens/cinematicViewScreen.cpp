@@ -9,12 +9,11 @@
 #include "gui/gui2_selector.h"
 #include "gui/gui2_togglebutton.h"
 
-CinematicViewScreen::CinematicViewScreen(int32_t playerShip /* = 0 */)
+CinematicViewScreen::CinematicViewScreen()
 {
     // Create a full-screen viewport.
     viewport = new GuiViewport3D(this, "VIEWPORT");
     viewport->setPosition(0, 0, ATopLeft)->setSize(GuiElement::GuiSizeMax, GuiElement::GuiSizeMax);
-    viewport->showCallsigns();
 
     // Initialize the camera's vertical position.
     camera_position.z = 200.0;
@@ -23,9 +22,9 @@ CinematicViewScreen::CinematicViewScreen(int32_t playerShip /* = 0 */)
     camera_yaw = -90.0f;
     camera_pitch = 45.0f;
 
-    // Lock onto player ship to start.
-    if (gameGlobalInfo->getPlayerShip(playerShip))
-        target = gameGlobalInfo->getPlayerShip(playerShip);
+    // Lock onto player ship 0 to start.
+    if (gameGlobalInfo->getPlayerShip(0))
+        target = gameGlobalInfo->getPlayerShip(0);
 
     // Let the screen operator select a player ship to lock the camera onto.
     camera_lock_selector = new GuiSelector(this, "CAMERA_LOCK_SELECTOR", [this](int index, string value) {
@@ -36,10 +35,10 @@ CinematicViewScreen::CinematicViewScreen(int32_t playerShip /* = 0 */)
     camera_lock_selector->setSelectionIndex(0)->setPosition(20, -80, ABottomLeft)->setSize(300, 50)->hide();
 
     // Toggle whether to lock the camera onto a ship.
-    camera_lock_toggle = new GuiToggleButton(this, "CAMERA_LOCK_TOGGLE", tr("button", "Lock camera on ship"), [this](bool value) {});
+    camera_lock_toggle = new GuiToggleButton(this, "CAMERA_LOCK_TOGGLE", "Lock camera on ship", [this](bool value) {});
     camera_lock_toggle->setValue(true)->setPosition(20, -20, ABottomLeft)->setSize(300, 50)->hide();
 
-    camera_lock_tot_toggle = new GuiToggleButton(this, "CAMERA_LOCK_TOT_TOGGLE", tr("button", "Lock camera on ship's target"), [this](bool value) {});
+    camera_lock_tot_toggle = new GuiToggleButton(this, "CAMERA_LOCK_TOT_TOGGLE", "Lock camera on ship's target", [this](bool value) {});
     camera_lock_tot_toggle->setValue(true)->setPosition(320, -20, ABottomLeft)->setSize(350, 50)->hide();
 
     new GuiIndicatorOverlays(this);
@@ -146,13 +145,11 @@ void CinematicViewScreen::update(float delta)
         // float target_velocity = sf::length(target->getVelocity());
 
         // We want the camera to always be less than 1U from the selected ship.
-        max_camera_distance = 1000.0f + target->getRadius() + sf::length(target->getVelocity());
+        max_camera_distance = 1000.0f + target->getRadius();
         min_camera_distance = target->getRadius() * 2.0f;
 
         // Check if our selected ship has a weapons target.
         target_of_target = target->getTarget();
-        if (target_of_target && sf::length(target_of_target->getPosition() - target_position_2D) > 10000.0)
-            target_of_target = nullptr;
 
         // If it does, lock the camera onto that target.
         if (camera_lock_tot_toggle->getValue() && target_of_target)
@@ -163,7 +160,7 @@ void CinematicViewScreen::update(float delta)
             tot_position_3D.x = tot_position_2D.x;
             tot_position_3D.y = tot_position_3D.y;
             tot_position_3D.z = 0;
-
+            
             // Get the diff, distance, and angle between the ToT and camera.
             tot_diff_2D = tot_position_2D - camera_position_2D;
             tot_diff_3D = tot_position_3D - camera_position;
@@ -182,8 +179,8 @@ void CinematicViewScreen::update(float delta)
             }
 
             angle_pitch = (atan(camera_position.z / tot_distance_3D)) * (180 / pi);
-        }
-
+        } 
+        
         if (distance_2D > max_camera_distance)
         // If the selected ship moves more than 1U from the camera ...
         {
@@ -204,7 +201,7 @@ void CinematicViewScreen::update(float delta)
                 camera_position.x -= diff_2D.x / distance_2D * (min_camera_distance - distance_3D);
                 camera_position.y -= diff_2D.y / distance_2D * (min_camera_distance - distance_3D);
             }
-
+            
             if (!camera_lock_tot_toggle->getValue() || !target_of_target)
             {
                 // Calculate the angles between the camera and the ship.

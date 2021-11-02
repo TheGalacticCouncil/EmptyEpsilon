@@ -5,8 +5,6 @@
 #include "main.h"
 
 #include "scriptInterface.h"
-
-/// A warp jammer.
 REGISTER_SCRIPT_SUBCLASS(WarpJammer, SpaceObject)
 {
     REGISTER_SCRIPT_CLASS_FUNCTION(WarpJammer, setRange);
@@ -32,16 +30,11 @@ WarpJammer::WarpJammer()
     setRadarSignatureInfo(0.05, 0.5, 0.0);
 
     registerMemberReplication(&range);
-
+    
     model_info.setData("shield_generator");
 }
 
-// Due to a suspected compiler bug this desconstructor needs to be explicity defined
-WarpJammer::~WarpJammer()
-{
-}
-
-void WarpJammer::drawOnRadar(sf::RenderTarget& window, sf::Vector2f position, float scale, float rotation, bool long_range)
+void WarpJammer::drawOnRadar(sf::RenderTarget& window, sf::Vector2f position, float scale, bool long_range)
 {
     sf::Sprite object_sprite;
     textureManager.setTexture(object_sprite, "RadarBlip.png");
@@ -80,15 +73,14 @@ void WarpJammer::takeDamage(float damage_amount, DamageInfo info)
         P<ExplosionEffect> e = new ExplosionEffect();
         e->setSize(getRadius());
         e->setPosition(getPosition());
-        e->setRadarSignatureInfo(0.5, 0.5, 0.1);
 
         if (on_destruction.isSet())
         {
             if (info.instigator)
             {
-                on_destruction.call<void>(P<WarpJammer>(this), P<SpaceObject>(info.instigator));
+                on_destruction.call(P<WarpJammer>(this), P<SpaceObject>(info.instigator));
             } else {
-                on_destruction.call<void>(P<WarpJammer>(this));
+                on_destruction.call(P<WarpJammer>(this));
             }
         }
 
@@ -98,9 +90,9 @@ void WarpJammer::takeDamage(float damage_amount, DamageInfo info)
         {
             if (info.instigator)
             {
-                on_taking_damage.call<void>(P<WarpJammer>(this), P<SpaceObject>(info.instigator));
+                on_taking_damage.call(P<WarpJammer>(this), P<SpaceObject>(info.instigator));
             } else {
-                on_taking_damage.call<void>(P<WarpJammer>(this));
+                on_taking_damage.call(P<WarpJammer>(this));
             }
         }
     }
@@ -154,13 +146,4 @@ void WarpJammer::onTakingDamage(ScriptSimpleCallback callback)
 void WarpJammer::onDestruction(ScriptSimpleCallback callback)
 {
     this->on_destruction = callback;
-}
-
-string WarpJammer::getExportLine()
-{
-    string ret = "WarpJammer():setFaction(\"" + getFaction() + "\"):setPosition(" + string(getPosition().x, 0) + ", " + string(getPosition().y, 0) + ")";
-    if (getRange()!=7000.0) {
-	    ret += ":setRange("+string(getRange())+")";
-    }
-    return ret;
 }

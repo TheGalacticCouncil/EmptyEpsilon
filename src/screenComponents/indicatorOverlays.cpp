@@ -1,4 +1,3 @@
-#include <i18n.h>
 #include "indicatorOverlays.h"
 #include "playerInfo.h"
 #include "gameGlobalInfo.h"
@@ -14,20 +13,20 @@ GuiIndicatorOverlays::GuiIndicatorOverlays(GuiContainer* owner)
 : GuiElement(owner, "INDICATOR_OVERLAYS")
 {
     setSize(GuiElement::GuiSizeMax, GuiElement::GuiSizeMax);
-
+    
     shield_hit_overlay = new GuiOverlay(this, "SHIELD_HIT", sf::Color(64, 64, 128, 0));
     hull_hit_overlay = new GuiOverlay(this, "HULL_HIT", sf::Color(255, 0, 0, 0));
     shield_low_warning_overlay = new GuiOverlay(this, "SHIELD_LOW", sf::Color(255, 0, 0, 0));
     pause_overlay = new GuiOverlay(this, "PAUSE", sf::Color(0, 0, 0, 128));
     (new GuiPanel(pause_overlay, "PAUSE_BOX"))->setPosition(0, 0, ACenter)->setSize(500, 100);
-    (new GuiLabel(pause_overlay, "PAUSE_LABEL", tr("Game Paused"), 70))->setPosition(0, 0, ACenter)->setSize(500, 100);
+    (new GuiLabel(pause_overlay, "PAUSE_LABEL", "Game Paused", 70))->setPosition(0, 0, ACenter)->setSize(500, 100);
     if (game_server)
     {
-        (new GuiButton(pause_overlay, "PAUSE_RESUME", tr("Unpause"), []() {
+        (new GuiButton(pause_overlay, "PAUSE_RESUME", "Unpause", []() {
             engine->setGameSpeed(1.0);
         }))->setPosition(0, 75, ACenter)->setSize(500, 50);
     }
-
+    
     victory_overlay = new GuiOverlay(this, "VICTORY", sf::Color(0, 0, 0, 128));
     (new GuiPanel(victory_overlay, "VICTORY_BOX"))->setPosition(0, 0, ACenter)->setSize(500, 100);
     victory_label = new GuiLabel(victory_overlay, "VICTORY_LABEL", "...", 70);
@@ -42,7 +41,7 @@ GuiIndicatorOverlays::~GuiIndicatorOverlays()
 
 static float glow(float min, float max, float time)
 {
-    return min + (max - min) * std::abs(fmodf(engine->getElapsedTime() / time, 2.0) - 1.0);
+    return min + (max - min) * fabsf(fmodf(engine->getElapsedTime() / time, 2.0) - 1.0);
 }
 
 void GuiIndicatorOverlays::onDraw(sf::RenderTarget& window)
@@ -50,7 +49,7 @@ void GuiIndicatorOverlays::onDraw(sf::RenderTarget& window)
     if (my_spaceship)
     {
         drawAlertLevel(window);
-
+    
         float shield_hit = 0.0;
         bool low_shields = false;
         for(int n=0; n<my_spaceship->shield_count; n++)
@@ -61,14 +60,14 @@ void GuiIndicatorOverlays::onDraw(sf::RenderTarget& window)
         }
         shield_hit = (shield_hit - 0.5) / 0.5;
         shield_hit_overlay->setAlpha(32 * shield_hit);
-
+        
         if (low_shields)
         {
             shield_low_warning_overlay->setAlpha(glow(16, 48, 0.5));
         }else{
             shield_low_warning_overlay->setAlpha(0);
         }
-
+        
         hull_hit_overlay->setAlpha(128 * (my_spaceship->hull_damage_indicator / 1.5));
     }else{
         shield_hit_overlay->setAlpha(0);
@@ -101,12 +100,9 @@ void GuiIndicatorOverlays::onDraw(sf::RenderTarget& window)
         warpPostProcessor->enabled = false;
         glitchPostProcessor->enabled = false;
     }
-
+    
     if (engine->getGameSpeed() == 0.0)
     {
-        warpPostProcessor->enabled = false;
-        glitchPostProcessor->enabled = false;
-
         if (gameGlobalInfo->getVictoryFactionId() < 0)
         {
             pause_overlay->show();
@@ -114,7 +110,7 @@ void GuiIndicatorOverlays::onDraw(sf::RenderTarget& window)
         }else{
             pause_overlay->hide();
             victory_overlay->show();
-
+            
             EFactionVsFactionState fvf_state = FVF_Neutral;
             if (my_spaceship)
             {
@@ -123,13 +119,13 @@ void GuiIndicatorOverlays::onDraw(sf::RenderTarget& window)
             switch(fvf_state)
             {
             case FVF_Enemy:
-                victory_label->setText(tr("Defeat!"));
+                victory_label->setText("Defeat!");
                 break;
             case FVF_Friendly:
-                victory_label->setText(tr("Victory!"));
+                victory_label->setText("Victory!");
                 break;
             case FVF_Neutral:
-                victory_label->setText(tr("{faction} wins").format({{"faction", factionInfo[gameGlobalInfo->getVictoryFactionId()]->getLocaleName()}}));
+                victory_label->setText(factionInfo[gameGlobalInfo->getVictoryFactionId()]->getName() + " wins");
                 break;
             }
         }
@@ -149,7 +145,7 @@ bool GuiIndicatorOverlays::onMouseDown(sf::Vector2f position)
 void GuiIndicatorOverlays::drawAlertLevel(sf::RenderTarget& window)
 {
     sf::Color multiply_color = sf::Color::White;
-
+    
     switch(my_spaceship->alert_level)
     {
     case AL_RedAlert:

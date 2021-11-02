@@ -4,8 +4,9 @@
 #include <SFML/System.hpp>
 #include "stringImproved.h"
 
-struct MeshVertex
+class MeshVertex
 {
+public:
     float position[3];
     float normal[3];
     float uv[2];
@@ -13,16 +14,19 @@ struct MeshVertex
 
 class Mesh : public sf::NonCopyable
 {
-    std::vector<MeshVertex> vertices;
-    uint32_t vbo;
-public:
-    explicit Mesh(std::vector<MeshVertex>&& vertices);
-    ~Mesh();
+    int vertexCount;
+    MeshVertex* vertices;
+    unsigned int vbo;
 
-    void render(int32_t position_attrib, int32_t texcoords_attrib, int32_t normal_attrib);
+    Mesh();
+public:
+    Mesh(std::vector<MeshVertex>& vertices);
+    ~Mesh();
+    
+    void render();
     sf::Vector3f randomPoint();
 
-    static Mesh* getMesh(const string& filename);
+    static Mesh* getMesh(string filename);
 };
 
 #endif//MESH_H

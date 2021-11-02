@@ -32,11 +32,4 @@ template<> void convert<EMainScreenOverlay>::param(lua_State* L, int& idx, EMain
     else
         mso = MSO_HideComms;
 }
-
-template<> int convert<Speeds>::returnType(lua_State* L,const Speeds &speeds)
-{
-    lua_pushnumber(L, speeds.forward);
-    lua_pushnumber(L, speeds.reverse);
-    return 2;
-}
 #endif /* _SPACESHIP_HPP_ */

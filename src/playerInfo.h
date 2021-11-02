@@ -21,9 +21,7 @@ enum ECrewPosition
     damageControl,
     powerManagement,
     databaseView,
-    altRelay,
-    commsOnly,
-    shipLog,
+
     max_crew_positions
 };
 
@@ -39,20 +37,15 @@ public:
     int32_t client_id;
 
     bool crew_position[max_crew_positions];
-    bool main_screen = false;
-    bool main_screen_control = false;
+    bool main_screen_control;
     int32_t ship_id;
-    string name;
 
     PlayerInfo();
 
-    bool isOnlyMainScreen();
-
+    bool isMainScreen();
     void commandSetCrewPosition(ECrewPosition position, bool active);
     void commandSetShipId(int32_t id);
-    void commandSetMainScreen(bool enabled);
     void commandSetMainScreenControl(bool control);
-    void commandSetName(const string& name);
     virtual void onReceiveClientCommand(int32_t client_id, sf::Packet& packet);
 
     void spawnUI();

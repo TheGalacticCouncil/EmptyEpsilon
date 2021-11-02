@@ -1,9 +1,7 @@
-#include <i18n.h>
 #include "tutorialGame.h"
 #include "scriptInterface.h"
 #include "playerInfo.h"
 #include "spaceObjects/playerSpaceship.h"
-#include "preferenceManager.h"
 #include "main.h"
 
 #include "screenComponents/viewport3d.h"
@@ -51,8 +49,6 @@ TutorialGame::TutorialGame(bool repeated_tutorial, string filename)
     this->viewport = nullptr;
     this->repeated_tutorial = repeated_tutorial;
 
-    i18n::load("locale/main." + PreferencesManager::get("language", "en") + ".po");
-    i18n::load("locale/tutorial." + PreferencesManager::get("language", "en") + ".po");
     script = new ScriptObject();
     script->registerObject(this, "tutorial");
     script->run(filename);
@@ -63,10 +59,10 @@ void TutorialGame::createScreens()
     viewport = new GuiViewport3D(this, "");
     viewport->setSize(GuiElement::GuiSizeMax, GuiElement::GuiSizeMax)->setPosition(0, 0, ATopLeft);
 
-    tactical_radar = new GuiRadarView(this, "TACTICAL", nullptr);
+    tactical_radar = new GuiRadarView(this, "TACTICAL", 5000.0f, nullptr);
     tactical_radar->setPosition(0, 0, ATopLeft)->setSize(GuiElement::GuiSizeMax, GuiElement::GuiSizeMax);
     tactical_radar->setRangeIndicatorStepSize(1000.0f)->shortRange()->enableCallsigns()->hide();
-    long_range_radar = new GuiRadarView(this, "TACTICAL", nullptr);
+    long_range_radar = new GuiRadarView(this, "TACTICAL", 30000.0f, nullptr);
     long_range_radar->setPosition(0, 0, ATopLeft)->setSize(GuiElement::GuiSizeMax, GuiElement::GuiSizeMax);
     long_range_radar->setRangeIndicatorStepSize(5000.0f)->longRange()->enableCallsigns()->hide();
     long_range_radar->setFogOfWarStyle(GuiRadarView::NebulaFogOfWar);
@@ -75,7 +71,7 @@ void TutorialGame::createScreens()
     station_screen[1] = new WeaponsScreen(this);
     station_screen[2] = new EngineeringScreen(this);
     station_screen[3] = new ScienceScreen(this);
-    station_screen[4] = new RelayScreen(this, true);
+    station_screen[4] = new RelayScreen(this);
     station_screen[5] = new TacticalScreen(this);
     station_screen[6] = new EngineeringAdvancedScreen(this);
     station_screen[7] = new OperationScreen(this);
@@ -89,14 +85,14 @@ void TutorialGame::createScreens()
 
     text = new GuiScrollText(frame, "", "");
     text->setTextSize(20)->setPosition(20, 20, ATopLeft)->setSize(900 - 40, 200 - 40);
-    next_button = new GuiButton(frame, "", tr("Next"), [this]() {
-        _onNext.call<void>();
+    next_button = new GuiButton(frame, "", "Next", [this]() {
+        _onNext.call();
     });
     next_button->setTextSize(30)->setPosition(-20, -20, ABottomRight)->setSize(300, 30);
 
     if (repeated_tutorial)
     {
-        (new GuiButton(this, "", tr("Reset"), [this]()
+        (new GuiButton(this, "", "Reset", [this]()
         {
             finish();
         }))->setPosition(-20, 20, ATopRight)->setSize(120, 50);
@@ -258,6 +254,10 @@ void TutorialGame::hideAllScreens()
     {
         station_screen[n]->hide();
     }
+}
+
+LocalOnlyGame::LocalOnlyGame()
+{
 }
 
 void LocalOnlyGame::update(float delta)

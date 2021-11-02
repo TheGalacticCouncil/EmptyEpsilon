@@ -66,18 +66,12 @@ void MineSweeper::reset()
     }
     error_count = 0;
     correct_count = 0;
+
 }
 
 float MineSweeper::getProgress()
 {
     return (float)correct_count / (float)(field_size * field_size - bomb_count);
-}
-
-void MineSweeper::gameComplete()
-{
-    bool success = correct_count == (field_size * field_size) - bomb_count;
-    parent->onMiniGameComplete(success);
-    game_complete = true;
 }
 
 sf::Vector2f MineSweeper::getBoardSize()
@@ -139,6 +133,7 @@ void MineSweeper::onFieldClick(int x, int y)
         gameComplete();
     }
 }
+
 
 MineSweeper::FieldItem* MineSweeper::getFieldItem(int x, int y)
 {

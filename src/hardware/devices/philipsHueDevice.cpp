@@ -3,9 +3,7 @@
 #include "philipsHueDevice.h"
 #include "hardware/serialDriver.h"
 #include "logging.h"
-#ifndef _MSC_VER
 #include <unistd.h>
-#endif
 #include <json11/json11.hpp>
 
 using namespace json11;
@@ -116,7 +114,7 @@ bool PhilipsHueDevice::configure(std::unordered_map<string, string> settings)
         }
         sf::sleep(sf::milliseconds(5000));
     }
-
+    
     if (username != "")
     {
         sf::Http http(ip_address,port);
@@ -152,7 +150,7 @@ bool PhilipsHueDevice::configure(std::unordered_map<string, string> settings)
             }
 
             lights.resize(light_count);
-
+            
             FILE* f = fopen(userfile.c_str(), "wt");
             if (f)
             {

@@ -1,4 +1,3 @@
-#include <GL/glew.h>
 #include <SFML/OpenGL.hpp>
 #include "asteroid.h"
 #include "explosionEffect.h"
@@ -6,19 +5,12 @@
 #include "pathPlanner.h"
 
 #include "scriptInterface.h"
-#include "glObjects.h"
-#include "shaderRegistry.h"
 
 /// An asteroid in space. Which you can fly into and hit. Will do damage.
 REGISTER_SCRIPT_SUBCLASS(Asteroid, SpaceObject)
 {
-    /// Set the radius of this asteroid
-    /// The default radius for an asteroid is between 110 and 130
-    /// Example: Asteroid():setSize(50)
+    /// Set the size of this asteroid, per default asteroids have a size of 120
     REGISTER_SCRIPT_CLASS_FUNCTION(Asteroid, setSize);
-    /// Gets the current radius of this asteroid
-    /// Example: local size=Asteroid():getSize()
-    REGISTER_SCRIPT_CLASS_FUNCTION(Asteroid, getSize);
 }
 
 REGISTER_MULTIPLAYER_CLASS(Asteroid, "Asteroid");
@@ -34,7 +26,7 @@ Asteroid::Asteroid()
 
     registerMemberReplication(&z);
     registerMemberReplication(&size);
-
+    
     PathPlannerManager::getInstance()->addAvoidObject(this, 300);
 }
 
@@ -47,28 +39,16 @@ void Asteroid::draw3D()
     glTranslatef(0, 0, z);
     glRotatef(engine->getElapsedTime() * rotation_speed, 0, 0, 1);
     glScalef(getRadius(), getRadius(), getRadius());
-
-    ShaderRegistry::ScopedShader shader(ShaderRegistry::Shaders::ObjectSpecular);
-
-    glBindTexture(GL_TEXTURE_2D, textureManager.getTexture("Astroid_" + string(model_number) + "_d.png")->getNativeHandle());
-
-    glActiveTexture(GL_TEXTURE0 + ShaderRegistry::textureIndex(ShaderRegistry::Textures::SpecularMap));
-    glBindTexture(GL_TEXTURE_2D, textureManager.getTexture("Astroid_" + string(model_number) + "_s.png")->getNativeHandle());
-
+    sf::Shader* shader = ShaderManager::getShader("objectShaderBS");
+    shader->setUniform("baseMap", *textureManager.getTexture("Astroid_" + string(model_number) + "_d.png"));
+    shader->setUniform("specularMap", *textureManager.getTexture("Astroid_" + string(model_number) + "_s.png"));
+    sf::Shader::bind(shader);
     Mesh* m = Mesh::getMesh("Astroid_" + string(model_number) + ".model");
-
-    gl::ScopedVertexAttribArray positions(shader.get().attribute(ShaderRegistry::Attributes::Position));
-    gl::ScopedVertexAttribArray texcoords(shader.get().attribute(ShaderRegistry::Attributes::Texcoords));
-    gl::ScopedVertexAttribArray normals(shader.get().attribute(ShaderRegistry::Attributes::Normal));
-
-    m->render(positions.get(), texcoords.get(), normals.get());
-
-
-    glActiveTexture(GL_TEXTURE0);
+    m->render();
 #endif//FEATURE_3D_RENDERING
 }
 
-void Asteroid::drawOnRadar(sf::RenderTarget& window, sf::Vector2f position, float scale, float rotation, bool long_range)
+void Asteroid::drawOnRadar(sf::RenderTarget& window, sf::Vector2f position, float scale, bool long_range)
 {
     if (size != getRadius())
         setRadius(size);
@@ -99,31 +79,19 @@ void Asteroid::collide(Collisionable* target, float force)
     P<ExplosionEffect> e = new ExplosionEffect();
     e->setSize(getRadius());
     e->setPosition(getPosition());
-    e->setRadarSignatureInfo(0.0, 0.1, 0.2);
     destroy();
 }
 
 void Asteroid::setSize(float size)
 {
-    this->size = size;
     setRadius(size);
-}
-
-float Asteroid::getSize()
-{
-    return size;
 }
 
 /// An asteroid in space. Outside of hit range, just for visuals.
 REGISTER_SCRIPT_SUBCLASS(VisualAsteroid, SpaceObject)
 {
-    /// Set the radius of this asteroid
-    /// The default radius for an VisualAsteroid is between 110 and 130
-    /// Example: VisualAsteroid():setSize(50)
+    /// Set the size of this asteroid, per default asteroids have a size of 120
     REGISTER_SCRIPT_CLASS_FUNCTION(VisualAsteroid, setSize);
-    /// Gets the current radius of this asteroid
-    /// Example: local size=VisualAsteroid():getSize()
-    REGISTER_SCRIPT_CLASS_FUNCTION(VisualAsteroid, getSize);
 }
 
 REGISTER_MULTIPLAYER_CLASS(VisualAsteroid, "VisualAsteroid");
@@ -152,35 +120,18 @@ void VisualAsteroid::draw3D()
     glTranslatef(0, 0, z);
     glRotatef(engine->getElapsedTime() * rotation_speed, 0, 0, 1);
     glScalef(getRadius(), getRadius(), getRadius());
-
-    ShaderRegistry::ScopedShader shader(ShaderRegistry::Shaders::ObjectSpecular);
-
-    glBindTexture(GL_TEXTURE_2D, textureManager.getTexture("Astroid_" + string(model_number) + "_d.png")->getNativeHandle());
-
-    glActiveTexture(GL_TEXTURE0 + ShaderRegistry::textureIndex(ShaderRegistry::Textures::SpecularMap));
-    glBindTexture(GL_TEXTURE_2D, textureManager.getTexture("Astroid_" + string(model_number) + "_s.png")->getNativeHandle());
-
+    sf::Shader* shader = ShaderManager::getShader("objectShaderBS");
+    shader->setUniform("baseMap", *textureManager.getTexture("Astroid_" + string(model_number) + "_d.png"));
+    shader->setUniform("specularMap", *textureManager.getTexture("Astroid_" + string(model_number) + "_s.png"));
+    sf::Shader::bind(shader);
     Mesh* m = Mesh::getMesh("Astroid_" + string(model_number) + ".model");
-
-    gl::ScopedVertexAttribArray positions(shader.get().attribute(ShaderRegistry::Attributes::Position));
-    gl::ScopedVertexAttribArray texcoords(shader.get().attribute(ShaderRegistry::Attributes::Texcoords));
-    gl::ScopedVertexAttribArray normals(shader.get().attribute(ShaderRegistry::Attributes::Normal));
-    m->render(positions.get(), texcoords.get(), normals.get());
-
-    glActiveTexture(GL_TEXTURE0);
+    m->render();
 #endif//FEATURE_3D_RENDERING
-
 }
 
 void VisualAsteroid::setSize(float size)
 {
-    this->size = size;
     setRadius(size);
     while(fabs(z) < size * 2)
         z *= random(1.2, 2.0);
-}
-
-float VisualAsteroid::getSize()
-{
-    return size;
 }

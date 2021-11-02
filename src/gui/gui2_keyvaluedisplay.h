@@ -5,24 +5,23 @@
 
 class GuiKeyValueDisplay : public GuiElement
 {
-public:
-    GuiKeyValueDisplay(GuiContainer* owner, const string& id, float div_distance, const string& key, const string& value);
-
-    virtual void onDraw(sf::RenderTarget& window);
-
-    GuiKeyValueDisplay* setKey(const string& key);
-    GuiKeyValueDisplay* setValue(const string& value);
-    GuiKeyValueDisplay* setTextSize(float text_size);
-    GuiKeyValueDisplay* setColor(sf::Color color);
-    GuiKeyValueDisplay* setIcon(const string& icon_texture);
-
-private:
+protected:
+    float div_distance;
     string key;
     string value;
-    string icon_texture;
-    float text_size{};
-    float div_distance{};
+    float text_size;
     sf::Color color;
+    string icon_texture;
+public:
+    GuiKeyValueDisplay(GuiContainer* owner, string id, float div_distance, string key, string value);
+
+    virtual void onDraw(sf::RenderTarget& window);
+    
+    GuiKeyValueDisplay* setKey(string key);
+    GuiKeyValueDisplay* setValue(string value);
+    GuiKeyValueDisplay* setTextSize(float text_size);
+    GuiKeyValueDisplay* setColor(sf::Color color);
+    GuiKeyValueDisplay* setIcon(string icon_texture);
 };
 
 #endif//GUI_KEYVALUEDISPLAY_H
