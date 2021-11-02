@@ -2,10 +2,17 @@
 #include "particleEffect.h"
 #include "spaceObjects/explosionEffect.h"
 
+/// HVLI missile
+REGISTER_SCRIPT_SUBCLASS(HVLI, MissileWeapon)
+{
+  //registered for typeName and creation
+}
+
 REGISTER_MULTIPLAYER_CLASS(HVLI, "HVLI");
 HVLI::HVLI()
 : MissileWeapon("HVLI", MissileWeaponData::getDataFor(MW_HVLI))
 {
+    setRadarSignatureInfo(0.1, 0.0, 0.0);
 }
 
 void HVLI::hitObject(P<SpaceObject> object)
@@ -20,4 +27,5 @@ void HVLI::hitObject(P<SpaceObject> object)
     e->setSize(category_modifier * 20);
     e->setPosition(getPosition());
     e->setOnRadar(true);
+    setRadarSignatureInfo(0.0, 0.0, 0.1);
 }
