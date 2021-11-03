@@ -258,7 +258,7 @@ void EngineeringScreen::onDraw(sp::RenderTarget& renderer)
             case SYS_Reactor:
                 if (effectiveness > 1.0f)
                     effectiveness = (1.0f + effectiveness) / 2.0f;
-                addSystemEffect(tr("Energy production"),  tr("{energy}/min").format({{"energy", string(effectiveness * - my_spaceship->getSystemPowerUserFactor(selected_system) * 60.0f, 1)}}));
+                addSystemEffect(tr("Energy production"),  tr("{energy}/min").format({{"energy", string(effectiveness * - my_spaceship->getSystemPowerUserFactor(my_spaceship -> selected_system) * 60.0f, 1)}}));
                 break;
             case SYS_BeamWeapons:
                 addSystemEffect(tr("Firing rate"), toNearbyIntString(effectiveness * 100) + "%");
@@ -351,42 +351,42 @@ void EngineeringScreen::onUpdate()
             if (keys.engineering_set_power_000.getDown())
             {
                 power_slider->setValue(0.0f);
-                my_spaceship->commandSetSystemPowerRequest(selected_system, power_slider->getValue());
+                my_spaceship->commandSetSystemPowerRequest(my_spaceship -> selected_system, power_slider->getValue());
             }
             if (keys.engineering_set_power_030.getDown())
             {
                 power_slider->setValue(0.3f);
-                my_spaceship->commandSetSystemPowerRequest(selected_system, power_slider->getValue());
+                my_spaceship->commandSetSystemPowerRequest(my_spaceship -> selected_system, power_slider->getValue());
             }
             if (keys.engineering_set_power_050.getDown())
             {
                 power_slider->setValue(0.5f);
-                my_spaceship->commandSetSystemPowerRequest(selected_system, power_slider->getValue());
+                my_spaceship->commandSetSystemPowerRequest(my_spaceship -> selected_system, power_slider->getValue());
             }
             if (keys.engineering_set_power_100.getDown())
             {
                 power_slider->setValue(1.0f);
-                my_spaceship->commandSetSystemPowerRequest(selected_system, power_slider->getValue());
+                my_spaceship->commandSetSystemPowerRequest(my_spaceship -> selected_system, power_slider->getValue());
             }
             if (keys.engineering_set_power_150.getDown())
             {
                 power_slider->setValue(1.5f);
-                my_spaceship->commandSetSystemPowerRequest(selected_system, power_slider->getValue());
+                my_spaceship->commandSetSystemPowerRequest(my_spaceship -> selected_system, power_slider->getValue());
             }
             if (keys.engineering_set_power_200.getDown())
             {
                 power_slider->setValue(2.0f);
-                my_spaceship->commandSetSystemPowerRequest(selected_system, power_slider->getValue());
+                my_spaceship->commandSetSystemPowerRequest(my_spaceship -> selected_system, power_slider->getValue());
             }
             if (keys.engineering_set_power_250.getDown())
             {
                 power_slider->setValue(2.5f);
-                my_spaceship->commandSetSystemPowerRequest(selected_system, power_slider->getValue());
+                my_spaceship->commandSetSystemPowerRequest(my_spaceship -> selected_system, power_slider->getValue());
             }
             if (keys.engineering_set_power_300.getDown())
             {
                 power_slider->setValue(3.0f);
-                my_spaceship->commandSetSystemPowerRequest(selected_system, power_slider->getValue());
+                my_spaceship->commandSetSystemPowerRequest(my_spaceship -> selected_system, power_slider->getValue());
             }
             auto power_adjust = (keys.engineering_increase_power.getValue() - keys.engineering_decrease_power.getValue()) * 0.1f;
             if (power_adjust != 0.0f)
