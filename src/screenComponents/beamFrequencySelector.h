@@ -10,6 +10,7 @@ public:
 
     virtual void onDraw(sf::RenderTarget& window);
     virtual void onHotkey(const HotkeyResult& key) override;
+    virtual void onUpdate() override;
 };
 
 #endif//BEAM_FREQUENCY_SELECTOR_H
