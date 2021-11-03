@@ -51,6 +51,15 @@ void AimLockButton::setAimLock(bool value)
     }
 }
 
+void AimLockButton::onDraw(sp::RenderTarget& window)
+{
+    if (my_spaceship) {
+        setValue(!my_spaceship->manual_aim);
+    }
+
+    GuiToggleButton::onDraw(window);
+}
+
 AimLock::AimLock(GuiContainer* owner, string id, GuiRadarView* radar, float min_value, float max_value, float start_value, func_t func)
 : GuiRotationDial(owner, id, min_value, max_value, start_value, func), radar(radar)
 {
@@ -61,10 +70,6 @@ void AimLock::onDraw(sp::RenderTarget& renderer)
     auto center = getCenterPoint();
     float view_rotation = radar->getViewRotation();
     float radius = std::min(rect.size.x, rect.size.y);
-
-    if (my_spaceship) {
-        setValue(!my_spaceship->manual_aim_angle);
-    }
 
     renderer.drawSprite("gui/widget/dial_background.png", center, radius);
     renderer.drawRotatedSprite("gui/widget/dial_button.png", center, radius, (getValue() - min_value) / (max_value - min_value) * 360.0f - view_rotation);
