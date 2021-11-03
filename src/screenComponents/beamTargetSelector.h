@@ -8,8 +8,7 @@ class GuiBeamTargetSelector : public GuiSelector
 public:
     GuiBeamTargetSelector(GuiContainer* owner, string id);
 
-    virtual void onDraw(sf::RenderTarget& window);
-    virtual void onHotkey(const HotkeyResult& key) override;
+    virtual void onDraw(sp::RenderTarget& window);
     virtual void onUpdate() override;
 };
 

@@ -35,7 +35,7 @@ void GuiBeamFrequencySelector::onUpdate()
     }
 }
 
-void GuiBeamFrequencySelector::onDraw(sf::RenderTarget& window)
+void GuiBeamFrequencySelector::onDraw(sp::RenderTarget& window)
 {
     if (my_spaceship)
         setSelectionIndex(my_spaceship->beam_frequency);
