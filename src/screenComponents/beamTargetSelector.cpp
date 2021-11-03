@@ -37,7 +37,7 @@ void GuiBeamTargetSelector::onUpdate()
     }
 }
 
-void GuiBeamTargetSelector::onDraw(sf::RenderTarget& window)
+void GuiBeamTargetSelector::onDraw(sp::RenderTarget& window)
 {
     if (my_spaceship)
         setSelectionIndex(my_spaceship->beam_system_target - SYS_None);

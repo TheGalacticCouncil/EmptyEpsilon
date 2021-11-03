@@ -15,7 +15,7 @@
 // PlayerSpaceship are ships controlled by a player crew.
 REGISTER_SCRIPT_SUBCLASS(PlayerSpaceship, SpaceShip)
 {
-    /// Returns the sf::Vector2f of a specific waypoint set by this ship.
+    /// Returns the glm::vec2 of a specific waypoint set by this ship.
     /// Takes the index of the waypoint as its parameter.
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, getWaypoint);
     /// Returns the total number of this ship's active waypoints.
@@ -1286,9 +1286,9 @@ void PlayerSpaceship::onReceiveClientCommand(int32_t client_id, sp::io::DataBuff
         break;
     case CMD_PREVIOUS_TARGET:
         {
-            sf::Vector2f playerPosition = this->getPosition();
-            sf::Vector2f targetPosition = playerPosition;
-            sf::Vector2f targetVector = sf::Vector2f(1, 1);
+            auto playerPosition = this->getPosition();
+            auto targetPosition = playerPosition;
+            auto targetVector = glm::vec2(1, 1);
             float targetAngle = 90;
             float smallestAngle = 360;
             int32_t newTargetId = target_id;
@@ -1298,12 +1298,12 @@ void PlayerSpaceship::onReceiveClientCommand(int32_t client_id, sp::io::DataBuff
             {
                 targetPosition = this->getTarget()->getPosition();
                 targetVector = targetPosition - playerPosition;
-                targetAngle = sf::vector2ToAngle(targetVector);
+                targetAngle = vec2ToAngle(targetVector);
             }
 
             // Get all possible targets on the radar range
             PVector<Collisionable> targetCandidates = CollisionManager::queryArea(
-                playerPosition - sf::Vector2f(5000, 5000), playerPosition + sf::Vector2f(5000, 5000));
+                playerPosition - glm::vec2(5000, 5000), playerPosition + glm::vec2(5000, 5000));
 
             foreach(Collisionable, obj, targetCandidates)
             {
@@ -1314,9 +1314,9 @@ void PlayerSpaceship::onReceiveClientCommand(int32_t client_id, sp::io::DataBuff
                     targetCandidate->getMultiplayerId() != target_id &&
                     targetCandidate->canBeTargetedBy(this))
                 {
-                    sf::Vector2f candidatePosition = targetCandidate->getPosition();
-                    sf::Vector2f candidateVector = candidatePosition - playerPosition;
-                    float candidateAngle = sf::vector2ToAngle(candidateVector);
+                    auto candidatePosition = targetCandidate->getPosition();
+                    auto candidateVector = candidatePosition - playerPosition;
+                    float candidateAngle = vec2ToAngle(candidateVector);
 
                     float angleDifference = targetAngle - candidateAngle;
 
@@ -1337,9 +1337,9 @@ void PlayerSpaceship::onReceiveClientCommand(int32_t client_id, sp::io::DataBuff
         break;
     case CMD_NEXT_TARGET:
         {
-            sf::Vector2f playerPosition = this->getPosition();
-            sf::Vector2f targetPosition = playerPosition;
-            sf::Vector2f targetVector = sf::Vector2f(1, 1);
+            auto playerPosition = this->getPosition();
+            auto targetPosition = playerPosition;
+            auto targetVector = glm::vec2(1, 1);
             float targetAngle = 90;
             float largestAngle = 0;
             int32_t newTargetId = target_id;
@@ -1349,12 +1349,12 @@ void PlayerSpaceship::onReceiveClientCommand(int32_t client_id, sp::io::DataBuff
             {
                 targetPosition = this->getTarget()->getPosition();
                 targetVector = targetPosition - playerPosition;
-                targetAngle = sf::vector2ToAngle(targetVector);
+                targetAngle = vec2ToAngle(targetVector);
             }
 
             // Get all possible targets on the radar range
             PVector<Collisionable> targetCandidates = CollisionManager::queryArea(
-                playerPosition - sf::Vector2f(5000, 5000), playerPosition + sf::Vector2f(5000, 5000));
+                playerPosition - glm::vec2(5000, 5000), playerPosition + glm::vec2(5000, 5000));
 
             foreach(Collisionable, obj, targetCandidates)
             {
@@ -1365,9 +1365,9 @@ void PlayerSpaceship::onReceiveClientCommand(int32_t client_id, sp::io::DataBuff
                     targetCandidate->getMultiplayerId() != target_id &&
                     targetCandidate->canBeTargetedBy(this))
                 {
-                    sf::Vector2f candidatePosition = targetCandidate->getPosition();
-                    sf::Vector2f candidateVector = candidatePosition - playerPosition;
-                    float candidateAngle = sf::vector2ToAngle(candidateVector);
+                    auto candidatePosition = targetCandidate->getPosition();
+                    auto candidateVector = candidatePosition - playerPosition;
+                    float candidateAngle = vec2ToAngle(candidateVector);
 
                     float angleDifference = targetAngle - candidateAngle;
 
