@@ -10,7 +10,7 @@ public:
 protected:
     float min_value;
     float max_value;
-    // float value;
+    float value;
     func_t func;
 public:
     GuiRotationDial(GuiContainer* owner, string id, float min_value, float max_value, float start_value, func_t func);
