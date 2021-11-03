@@ -42,6 +42,10 @@ jobs:
           cd _build_win32
           cmake ../EmptyEpsilon -G Ninja -DCMAKE_MAKE_PROGRAM=ninja -DCMAKE_TOOLCHAIN_FILE=../EmptyEpsilon/cmake/mingw.toolchain -DSERIOUS_PROTON_DIR=../SeriousProton -DWARNING_IS_ERROR=1
           ninja package
+      - uses: actions/upload-artifact@v2
+        with:
+          name: EE-Windows
+          path: /home/runner/work/EmptyEpsilon/EmptyEpsilon/_build_win32/EmptyEpsilon.zip
   macos:
     name: MacOS
     runs-on: macos-latest
@@ -123,7 +127,7 @@ jobs:
           -DSERIOUS_PROTON_DIR="../SeriousProton"
       - name: Build
         working-directory: ${{github.workspace}}/build
-        run: cmake --build . --config ${{ matrix.build_type }} --target package 
+        run: cmake --build . --config ${{ matrix.build_type }} --target package
   luatest:
     name: LuaTest
     runs-on: ubuntu-latest
