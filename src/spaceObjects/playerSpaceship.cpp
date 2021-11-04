@@ -1294,7 +1294,7 @@ void PlayerSpaceship::onReceiveClientCommand(int32_t client_id, sp::io::DataBuff
             int32_t newTargetId = target_id;
 
             // If player has current target, use it's values
-            if (target_id != -1)
+            if (target_id != -1 && this->getTarget() != NULL)
             {
                 targetPosition = this->getTarget()->getPosition();
                 targetVector = targetPosition - playerPosition;
@@ -1345,7 +1345,7 @@ void PlayerSpaceship::onReceiveClientCommand(int32_t client_id, sp::io::DataBuff
             int32_t newTargetId = target_id;
 
             // If player has current target, use it's values
-            if (target_id != -1)
+            if (target_id != -1 && this->getTarget() != NULL)
             {
                 targetPosition = this->getTarget()->getPosition();
                 targetVector = targetPosition - playerPosition;
