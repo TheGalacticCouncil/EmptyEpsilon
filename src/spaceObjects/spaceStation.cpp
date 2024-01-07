@@ -10,6 +10,14 @@
 #include "pathPlanner.h"
 
 #include "scriptInterface.h"
+
+/// A SpaceStation is an immobile ship-like object that repairs, resupplies, and recharges ships that dock with it.
+/// It sets several ShipTemplateBasedObject properties upon creation:
+/// - Its default callsign begins with "DS".
+/// - It restocks scan probes and CpuShip weapons by default.
+/// - It uses the scripts/comms_station.lua comms script by default.
+/// - When destroyed by damage, it awards or deducts a number of reputation points relative to its total shield strength and segments.
+/// - Any non-hostile SpaceShip can dock with it by default.
 REGISTER_SCRIPT_SUBCLASS(SpaceStation, ShipTemplateBasedObject)
 {
 }
@@ -36,7 +44,9 @@ void SpaceStation::drawOnRadar(sp::RenderTarget& renderer, glm::vec2 position, f
         drawShieldsOnRadar(renderer, position, scale, rotation, sprite_scale, true);
     }
     sprite_scale = std::max(0.15f, sprite_scale);
-    glm::u8vec4 color = factionInfo[getFactionId()]->gm_color;
+    glm::u8vec4 color{255,255,255,255};
+    if (factionInfo[getFactionId()])
+        color = factionInfo[getFactionId()]->getGMColor();
     if (my_spaceship)
     {
         if (isEnemy(my_spaceship))
@@ -80,14 +90,14 @@ void SpaceStation::destroyedByDamage(DamageInfo& info)
     }
 }
 
-bool SpaceStation::canBeDockedBy(P<SpaceObject> obj)
+DockStyle SpaceStation::canBeDockedBy(P<SpaceObject> obj)
 {
     if (isEnemy(obj))
-        return false;
+        return DockStyle::None;
     P<SpaceShip> ship = obj;
     if (!ship)
-        return false;
-    return true;
+        return DockStyle::None;
+    return DockStyle::External;
 }
 
 string SpaceStation::getExportLine()

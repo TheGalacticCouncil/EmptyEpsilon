@@ -22,7 +22,7 @@ class CrewStationScreen : public GuiCanvas, public Updatable
 {
     P<ThreatLevelEstimate> threat_estimate;
 public:
-    explicit CrewStationScreen(bool with_main_screen);
+    explicit CrewStationScreen(RenderLayer* render_layer, bool with_main_screen);
     virtual void destroy() override;
 
     GuiContainer* getTabContainer();
@@ -53,10 +53,10 @@ private:
     string keyboard_general = "";
     void showNextTab(int offset=1);
     void showTab(GuiElement* element);
+    string populateShortcutsList(ECrewPosition position);
 
     GuiElement* findTab(string name);
 
-    string listHotkeysLimited(string station);
     void tileViewport();
 };
 

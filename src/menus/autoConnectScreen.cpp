@@ -6,6 +6,7 @@
 #include "playerInfo.h"
 #include "multiplayer_client.h"
 #include "multiplayer_server_scanner.h"
+#include "screens/windowScreen.h"
 
 #include "gui/gui2_label.h"
 
@@ -23,6 +24,8 @@ AutoConnectScreen::AutoConnectScreen(ECrewPosition crew_position, bool control_m
     status_label->setPosition(0, 300, sp::Alignment::TopCenter)->setSize(0, 50);
 
     string position_name = "Main screen";
+    if (crew_position_raw >=1000 && crew_position_raw<=1360)
+        position_name =tr("Ship window");
     if (crew_position < max_crew_positions)
         position_name = getCrewPositionName(crew_position);
 
@@ -77,7 +80,6 @@ void AutoConnectScreen::update(float delta)
     }else{
         switch(game_client->getStatus())
         {
-        case GameClient::ReadyToConnect:
         case GameClient::Connecting:
         case GameClient::Authenticating:
             if (!connect_to_address.getHumanReadable().empty())
@@ -118,7 +120,12 @@ void AutoConnectScreen::update(float delta)
                         if (my_spaceship->getMultiplayerId() == my_player_info->ship_id && (crew_position == max_crew_positions || my_player_info->crew_position[crew_position]))
                         {
                             destroy();
-                            my_player_info->spawnUI();
+                            if (crew_position_raw >=1000 && crew_position_raw<=1360){
+                                uint8_t window_flags = PreferencesManager::get("ship_window_flags", "1").toInt();
+                                new WindowScreen(getRenderLayer(), crew_position_raw-1000, window_flags);
+                            } else{
+                                my_player_info->spawnUI(0, getRenderLayer());
+                            }
                         }
                     }
                 }else{
@@ -182,8 +189,10 @@ void AutoConnectScreen::connectToShip(int index)
 
     if (crew_position != max_crew_positions)    //If we are not the main screen, setup the right crew position.
     {
-        my_player_info->commandSetCrewPosition(crew_position, true);
-        my_player_info->commandSetMainScreenControl(control_main_screen);
+        my_player_info->commandSetCrewPosition(0, crew_position, true);
+        my_player_info->commandSetMainScreenControl(0, control_main_screen);
+    } else {
+        my_player_info->commandSetMainScreen(0, true);
     }
     my_player_info->commandSetShipId(ship->getMultiplayerId());
 }

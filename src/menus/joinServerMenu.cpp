@@ -7,11 +7,11 @@
 #include "gameGlobalInfo.h"
 #include "gui/gui2_label.h"
 #include "gui/gui2_panel.h"
+
 #include "gui/gui2_textentry.h"
 #include "gui/gui2_button.h"
 
-JoinServerScreen::JoinServerScreen(ServerBrowserMenu::SearchSource source, sp::io::network::Address ip)
-: ip(ip)
+JoinServerScreen::JoinServerScreen(ServerBrowserMenu::SearchSource source)
 {
     this->source = source;
 
@@ -28,21 +28,36 @@ JoinServerScreen::JoinServerScreen(ServerBrowserMenu::SearchSource source, sp::i
     password_entry_box->hide();
     password_entry = new GuiTextEntry(password_entry_box, "PASSWORD_ENTRY", "");
     password_entry->setPosition(20, 0, sp::Alignment::CenterLeft)->setSize(400, 50);
+    password_entry->setHidePassword();
     (new GuiButton(password_entry_box, "PASSWORD_ENTRY_OK", "Ok", [this]()
     {
         password_entry_box->hide();
         password_focused = false;
         game_client->sendPassword(password_entry->getText().upper());
     }))->setPosition(420, 0, sp::Alignment::CenterLeft)->setSize(160, 50);
-
-    new GameClient(VERSION_NUMBER, ip);
 }
+
+JoinServerScreen::JoinServerScreen(ServerBrowserMenu::SearchSource source, sp::io::network::Address ip, int port)
+: JoinServerScreen(source)
+{
+    this->ip = ip;
+    this->port = port;
+
+    new GameClient(VERSION_NUMBER, ip, port);
+}
+
+#ifdef STEAMSDK
+JoinServerScreen::JoinServerScreen(ServerBrowserMenu::SearchSource source, uint64_t steam_id)
+: JoinServerScreen(source)
+{
+    new GameClient(VERSION_NUMBER, steam_id);
+}
+#endif
 
 void JoinServerScreen::update(float delta)
 {
     switch(game_client->getStatus())
     {
-    case GameClient::ReadyToConnect:
     case GameClient::Connecting:
     case GameClient::Authenticating:
         //If we are still trying to connect, do nothing.
@@ -56,19 +71,21 @@ void JoinServerScreen::update(float delta)
             focus(password_entry);
         }
         break;
-    case GameClient::Disconnected:
-    {
+    case GameClient::Disconnected: {
         auto reason = game_client->getDisconnectReason();
         destroy();
         disconnectFromServer();
         
         new ServerBrowserMenu(this->source, reason);
-    }
-        
-        break;
+        } break;
     case GameClient::Connected:
         if (!this->ip.getHumanReadable().empty())
-            PreferencesManager::set("last_server", this->ip.getHumanReadable()[0]);
+        {
+            string last_server = this->ip.getHumanReadable()[0];
+            if (port != defaultServerPort)
+                last_server += ":" + string(port);
+            PreferencesManager::set("last_server", last_server);
+        }
         if (game_client->getClientId() > 0)
         {
             foreach(PlayerInfo, i, player_info_list)
@@ -76,7 +93,7 @@ void JoinServerScreen::update(float delta)
                     my_player_info = i;
             if (my_player_info && gameGlobalInfo)
             {
-                returnToShipSelection();
+                returnToShipSelection(getRenderLayer());
                 destroy();
             }
         }

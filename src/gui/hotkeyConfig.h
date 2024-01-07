@@ -43,7 +43,11 @@ public:
 
     //helms
     sp::io::Keybinding helms_increase_impulse;
+    sp::io::Keybinding helms_increase_impulse_1;
+    sp::io::Keybinding helms_increase_impulse_10;
     sp::io::Keybinding helms_decrease_impulse;
+    sp::io::Keybinding helms_decrease_impulse_1;
+    sp::io::Keybinding helms_decrease_impulse_10;
     sp::io::Keybinding helms_set_impulse;
     sp::io::Keybinding helms_zero_impulse;
     sp::io::Keybinding helms_max_impulse;
@@ -100,6 +104,7 @@ public:
     sp::io::Keybinding science_select_next_scannable;
     std::array<sp::io::Keybinding, 4> science_scan_param_increase;
     std::array<sp::io::Keybinding, 4> science_scan_param_decrease;
+    std::array<sp::io::Keybinding, 4> science_scan_param_set;
 
     //Engineering
     sp::io::Keybinding engineering_select_reactor;
@@ -131,6 +136,47 @@ public:
     sp::io::Keybinding engineering_self_destruct_start;
     sp::io::Keybinding engineering_self_destruct_confirm;
     sp::io::Keybinding engineering_self_destruct_cancel;
+
+    //Relay
+    sp::io::Keybinding relay_alert_level_none;
+    sp::io::Keybinding relay_alert_level_yellow;
+    sp::io::Keybinding relay_alert_level_red;
+
+    // Cinematic View
+    struct CinematicKeys {
+        CinematicKeys();
+        void init();
+        sp::io::Keybinding toggle_ui;
+        sp::io::Keybinding lock_camera;
+        sp::io::Keybinding cycle_camera;
+        sp::io::Keybinding previous_player_ship;
+        sp::io::Keybinding next_player_ship;
+        sp::io::Keybinding move_forward;
+        sp::io::Keybinding move_backward;
+        sp::io::Keybinding strafe_left;
+        sp::io::Keybinding strafe_right;
+        sp::io::Keybinding move_up;
+        sp::io::Keybinding move_down;
+        sp::io::Keybinding rotate_left;
+        sp::io::Keybinding rotate_right;
+        sp::io::Keybinding tilt_down;
+        sp::io::Keybinding tilt_up;
+    } cinematic;
+
+    // Top-down View
+    struct TopDownKeys {
+        TopDownKeys();
+        void init();
+        sp::io::Keybinding toggle_ui;
+        sp::io::Keybinding lock_camera;
+        sp::io::Keybinding previous_player_ship;
+        sp::io::Keybinding next_player_ship;
+        sp::io::Keybinding pan_up;
+        sp::io::Keybinding pan_down;
+        sp::io::Keybinding pan_left;
+        sp::io::Keybinding pan_right;
+    } topdown;
+   
 
     //GM
     sp::io::Keybinding gm_delete;

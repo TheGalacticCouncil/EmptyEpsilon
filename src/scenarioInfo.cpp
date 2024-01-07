@@ -1,6 +1,11 @@
 #include "scenarioInfo.h"
 #include "resources.h"
+#include "preferenceManager.h"
+#include <i18n.h>
 #include <unordered_set>
+
+static std::unique_ptr<i18n::Catalogue> locale;
+std::vector<ScenarioInfo> ScenarioInfo::cached_full_list;
 
 ScenarioInfo::ScenarioInfo(string filename)
 {
@@ -9,6 +14,7 @@ ScenarioInfo::ScenarioInfo(string filename)
 
     P<ResourceStream> stream = getResourceStream(filename);
     if (!stream) return;
+    locale = i18n::Catalogue::create("locale/" + filename.replace(".lua", "." + PreferencesManager::get("language", "en") + ".po"));
 
     string key;
     string value;
@@ -40,9 +46,10 @@ ScenarioInfo::ScenarioInfo(string filename)
         LOG(WARNING) << "No scenario category for: " << filename;
         categories.push_back("Unknown");
     }
+    locale.reset();
 }
 
-bool ScenarioInfo::hasCategory(const string& category)
+bool ScenarioInfo::hasCategory(const string& category) const
 {
     for(auto& c : categories)
         if (c == category)
@@ -62,11 +69,11 @@ void ScenarioInfo::addKeyValue(string key, string value)
     }
     if (key.lower() == "name")
     {
-        name = value;
+        name = locale->tr(value);
     }
     else if (key.lower() == "description")
     {
-        description = value;
+        description = locale->tr(value);
     }
     else if (key.lower() == "author")
     {
@@ -82,8 +89,9 @@ void ScenarioInfo::addKeyValue(string key, string value)
         {
             Setting setting;
             setting.key = "variation";
+            setting.key_localized = "variation";
             setting.description = "Select a scenario variation";
-            setting.options.emplace_back("None", "");
+            setting.options.push_back({"None", "None", ""});
             settings.push_back(setting);
             addSettingOption("variation", additional, value);
         }
@@ -92,7 +100,8 @@ void ScenarioInfo::addKeyValue(string key, string value)
     {
         Setting setting;
         setting.key = additional;
-        setting.description = value;
+        setting.key_localized = locale->tr("setting", additional);
+        setting.description = locale->tr("setting", value);
         settings.push_back(setting);
     }
     else if (additional == "" || !addSettingOption(key, additional, value))
@@ -105,14 +114,8 @@ std::vector<string> ScenarioInfo::getCategories()
 {
     std::vector<string> result;
     std::unordered_set<string> known_categories;
-    // Fetch and sort all Lua files starting with "scenario_".
-    std::vector<string> scenario_filenames = findResources("scenario_*.lua");
-    std::sort(scenario_filenames.begin(), scenario_filenames.end());
-    // remove duplicates
-    scenario_filenames.erase(std::unique(scenario_filenames.begin(), scenario_filenames.end()), scenario_filenames.end());
-    for(auto& filename : scenario_filenames)
+    for(const auto& info : getScenarios())
     {
-        ScenarioInfo info(filename);
         for(auto& category : info.categories)
         {
             if (known_categories.find(category) != known_categories.end())
@@ -136,7 +139,7 @@ bool ScenarioInfo::addSettingOption(string key, string option, string descriptio
     {
         if (setting.key == key)
         {
-            setting.options.emplace_back(option, description);
+            setting.options.push_back({option, locale->tr(key, option), locale->tr(key, description)});
             if (tag == "default")
                 setting.default_option = option;
             return true;
@@ -145,18 +148,28 @@ bool ScenarioInfo::addSettingOption(string key, string option, string descriptio
     return false;
 }
 
+const std::vector<ScenarioInfo>& ScenarioInfo::getScenarios()
+{
+    if (cached_full_list.empty())
+    {
+        // Fetch and sort all Lua files starting with "scenario_".
+        std::vector<string> scenario_filenames = findResources("scenario_*.lua");
+        std::sort(scenario_filenames.begin(), scenario_filenames.end());
+        // remove duplicates
+        scenario_filenames.erase(std::unique(scenario_filenames.begin(), scenario_filenames.end()), scenario_filenames.end());
+
+        for(string filename : scenario_filenames)
+            cached_full_list.emplace_back(filename);
+    }
+    return cached_full_list;
+}
+
 std::vector<ScenarioInfo> ScenarioInfo::getScenarios(const string& category)
 {
     std::vector<ScenarioInfo> result;
     
-    // Fetch and sort all Lua files starting with "scenario_".
-    std::vector<string> scenario_filenames = findResources("scenario_*.lua");
-    std::sort(scenario_filenames.begin(), scenario_filenames.end());
-    // remove duplicates
-    scenario_filenames.erase(std::unique(scenario_filenames.begin(), scenario_filenames.end()), scenario_filenames.end());
-    for(string filename : scenario_filenames)
+    for(const auto& info : getScenarios())
     {
-        ScenarioInfo info(filename);
         if (info.hasCategory(category))
             result.push_back(info);
     }

@@ -1,5 +1,5 @@
 -- Name: Training: Cruiser
--- Type: Mission
+-- Type: Basic
 -- Description: Basic Training Cource
 ---
 --- Objective: Destroy all enemy ships in the area.
@@ -11,12 +11,44 @@
 ---
 --- This is a short mission for inexperienced players.
 
+
 require("utils.lua")
 
 
 --- Ship creation functions
 function createExuariWeakInterceptor()
 	return CpuShip():setFaction("Exuari"):setTemplate("Dagger"):setBeamWeapon(0, 0, 0, 0, 0.1, 0.1)
+end
+
+function copyShipDBEntry(base_ship_template,new_ship)
+  ship_db = queryScienceDatabase("Ships")
+
+  -- Search each Ships class's entry for the base ship
+  for k,entry in ipairs(ship_db:getEntries())
+  do
+    base_ship_entry = entry:getEntryByName(base_ship_template)
+    if base_ship_entry ~= nil
+    then
+      break;
+    end
+  end
+
+  -- Create a new Exuari DB entry for the new ship
+  exuari_ship_db = ship_db:getEntryByName("Exuari")
+  new_ship_entry = exuari_ship_db:addEntry(new_ship:getTypeName())
+
+  -- Copy base ship data to the new entry
+  for k,v in pairs(base_ship_entry:getKeyValues())
+  do
+    new_ship_entry:setKeyValue(k,v)
+  end
+
+  new_ship_entry:setImage(base_ship_entry:getImage())
+  new_ship_entry:setLongDescription(base_ship_entry:getLongDescription())
+  -- Impossible without a getModelName() function
+  -- new_ship_entry:setModelName(base_ship_entry:getModelName())
+
+  return new_ship_entry
 end
 
 function createExuariWeakBomber()
@@ -35,14 +67,34 @@ function createExuariTransport()
 	return CpuShip():setFaction("Exuari"):setTemplate("Personnel Freighter 1"):setTypeName("Exuari transport")
 end
 
+-- Create a dummy ship to populate the ScienceDatabase entry, then destroy it
+init_transport = createExuariTransport()
+init_transport_entry = copyShipDBEntry("Personnel Freighter 1", init_transport)
+-- init_transport_entry:setLongDescription("The Exuari transport transports Exuari")
+init_transport_entry:setModelDataName("transport_1_1") -- manually entered from finding Personnel Freighter in shiptemplates
+init_transport:destroy()
+
 function createExuariFreighter()
 	return CpuShip():setFaction("Exuari"):setTemplate("Goods Freighter 5"):setTypeName("Exuari freighter")
 end
+
+-- Create a dummy ship to populate the ScienceDatabase entry, then destroy it
+init_transport = createExuariFreighter()
+init_transport_entry = copyShipDBEntry("Goods Freighter 5", init_transport)
+-- init_transport_entry:setLongDescription("The Exuari transport transports Exuari")
+init_transport_entry:setModelDataName("transport_2_5") -- manually entered from finding Goods Freighter in shiptemplates
+init_transport:destroy()
 
 function createExuariShuttle()
 	return CpuShip():setFaction("Exuari"):setTemplate("Racer"):setTypeName("Exuari shuttle"):setWarpDrive(false):setBeamWeapon(0, 0, 355, 0, 0.1, 0.1):setBeamWeapon(1, 0, 355, 0, 0.1, 0.1)
 end
 
+-- Create a dummy ship to populate the ScienceDatabase entry, then destroy it
+init_transport = createExuariShuttle()
+init_transport_entry = copyShipDBEntry("Racer", init_transport)
+-- init_transport_entry:setLongDescription("The Exuari transport transports Exuari")
+init_transport_entry:setModelDataName("small_frigate_1") -- manually entered from finding Racer in shiptemplates
+init_transport:destroy()
 
 -- init
 function init()
@@ -75,7 +127,7 @@ end
 function commsInstr()
     if not instr1 and timer > 8.0 then
         instr1 = true
-        command:sendCommsMessage(player, _([[This is Commander Saberhagen.
+        command:sendCommsMessage(player, _("goal-incCall", [[This is Commander Saberhagen.
 
 In this training mission you will practice the basic controls of a Phobos light cruiser.
 Since this is not a tutorial, you will be on your own to decide how to destroy all enemy targets in an Exuari training ground.
@@ -93,15 +145,15 @@ function finished(delta)
     end
     if finishedFlag == false then
         finishedFlag = true
-        local bonusString = _("bonusTarget", "escaped.")
+        local bonusString = _("msgMainscreen-bonusTarget", "escaped.")
         if not bonus:isValid() then
-            bonusString = _("bonusTarget", "destroyed.")
+            bonusString = _("msgMainscreen-bonusTarget", "destroyed.")
         end
-        globalMessage(string.format(_("globalMsg", [[Mission Complete.
+        globalMessage(string.format(_("msgMainscreen", [[Mission Complete.
 Your Time: %d
 Bonus target %s
 
-If you feel ready for combat, play scenario 'quick basic'.
+If you feel ready for combat, play scenario 'Basic Battle'.
 If you want to try another ship, play the next training mission.
 
 If you need more practice, play this training again

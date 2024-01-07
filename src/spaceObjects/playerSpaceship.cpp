@@ -12,137 +12,338 @@
 
 #include <SDL_assert.h>
 
-// PlayerSpaceship are ships controlled by a player crew.
+/// A PlayerSpaceship is a SpaceShip controlled by a player crew.
+/// If a function name begins with "command", the function is equivalent to the crew taking a corresponding action.
+/// Such commands can be limited by the ship's capabilities, including systems damage, lack of power, or insufficient weapons stocks.
 REGISTER_SCRIPT_SUBCLASS(PlayerSpaceship, SpaceShip)
 {
-    /// Returns the glm::vec2 of a specific waypoint set by this ship.
-    /// Takes the index of the waypoint as its parameter.
+    /// Returns the coordinates of a waypoint with the given index that's been set by this PlayerSpaceship.
+    /// Waypoints are 1-indexed.
+    /// Example: x,y = player:getWaypoint(1)
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, getWaypoint);
-    /// Returns the total number of this ship's active waypoints.
+    /// Returns the total number of active waypoints owned by this PlayerSpaceship.
+    /// Example: player:getWaypointCount()
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, getWaypointCount);
-    /// Returns the ship's EAlertLevel.
+    /// Returns this PlayerSpaceship's EAlertLevel.
+    /// Returns "Normal", "YELLOW ALERT", "RED ALERT", which differ from the valid values for PlayerSpaceship:commandSetAlertLevel().
+    /// Example: player:getAlertLevel()
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, getAlertLevel);
-    /// Sets whether this ship's shields are raised or lowered.
-    /// Takes a Boolean value.
+    /// Defines whether this PlayerSpaceship's shields are raised (true) or lowered (false).
+    /// Compare to CpuShips, whose shields are always active.
+    /// Example: player:setShieldsActive(true)
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, setShieldsActive);
-    /// Adds a message to the ship's log. Takes a string as the message and a
-    /// glm::u8vec4.
+    /// Adds a message to this PlayerSpaceship's log.
+    /// Takes a string as the message and a color applied to the logged message.
+    /// Example: player:addToShipLog("Acknowledged","yellow") -- adds "Acknowledged" in yellow to the `player` ship's log
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, addToShipLog);
-    /// Move all players connected to this ship to the same stations on a
-    /// different PlayerSpaceship. If the target isn't a PlayerSpaceship, this
-    /// function does nothing.
-    /// This can be used in scenarios to change the crew's ship.
+    /// Moves all players connected to this ship to the same crew positions on another PlayerSpaceship.
+    /// If the target isn't a PlayerSpaceship, this function has no effect.
+    /// Use this in scenarios to change the crew's ship.
+    /// Example: player:transferPlayersToShip(player2) -- transfer all player crew to `player2`
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, transferPlayersToShip);
-    /// Transfers only the crew members who fill a specific station to another
-    /// PlayerSpaceship.
+    /// Transfers only the crew members on a specific crew position to another PlayerSpaceship.
+    /// If a player is in multiple positions, this matches any of their positions and moves that player to all of the same positions on the destination ship.
+    /// Example: player:transferPlayersAtPositionToShip("helms",player2) -- transfer all crew on Helms to `player2`
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, transferPlayersAtPositionToShip);
-    /// Returns true if a station is occupied by a player, and false if not.
+    /// Returns whether a player occupies the given crew position on this PlayerSpaceship.
+    /// Example: player:hasPlayerAtPosition("helms")
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, hasPlayerAtPosition);
 
-    // Comms functions return Boolean values if true.
+    /// Returns whether this PlayerSpaceship's comms are not in use.
+    /// Use this to determine whether the player can accept an incoming hail or chat.
+    /// Example: player:isCommsInactive()
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, isCommsInactive);
+    /// Returns whether this PlayerSpaceship is opening comms with another SpaceObject.
+    /// Example: player:isCommsOpening()
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, isCommsOpening);
+    /// Returns whether this PlayerSpaceship is being hailed by another SpaceObject.
+    /// Example: player:isCommsBeingHailed()
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, isCommsBeingHailed);
+    /// Returns whether this PlayerSpaceship is being hailed by the GM.
+    /// Example: player:isCommsBeingHailedByGM()
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, isCommsBeingHailedByGM);
+    /// Returns whether comms to this PlayerSpaceship have failed to open.
+    /// Example: player:isCommsFailed()
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, isCommsFailed);
+    /// Returns whether comms to this PlayerSpaceship were broken off by the other SpaceObject.
+    /// Example: player:isCommsBroken()
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, isCommsBroken);
+    /// Returns whether comms between this PlayerSpaceship and a SpaceObject were intentionally closed.
+    /// Example: player:isCommsClosed()
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, isCommsClosed);
+    /// Returns whether this PlayerSpaceship is engaged in text chat with either the GM or another PlayerSpaceship.
+    /// Example: player:isCommsChatOpen()
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, isCommsChatOpen);
+    /// Returns whether this PlayerSpaceship is engaged in text chat with the GM.
+    /// Example: player:isCommsChatOpenToGM()
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, isCommsChatOpenToGM);
+    /// Returns whether this PlayerSpaceship is engaged in text chat with another PlayerSpaceship.
+    /// Example: player:isCommsChatOpenToPlayer()
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, isCommsChatOpenToPlayer);
+    /// Returns whether this PlayerSpaceship is engaged in comms with a scripted SpaceObject.
+    /// Example: player:isCommsScriptOpen()
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, isCommsScriptOpen);
 
+    /// Sets this PlayerSpaceship's energy level.
+    /// Values are limited from 0 to the energy level max. Negative or excess values are capped to the limits.
+    /// Example: player:setEnergyLevel(1000) -- sets the ship's energy to either 1000 or the max limit, whichever is lower
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, setEnergyLevel);
+    /// Sets this PlayerSpaceship's energy capacity.
+    /// Valid values are 0 or any positive number.
+    /// If the new limit is lower than the ship's current energy level, this also reduces the energy level.
+    /// Example: player:setEnergyLevelMax(1000) -- sets the ship's energy limit to 1000
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, setEnergyLevelMax);
+    /// Returns this PlayerSpaceship's energy level.
+    /// Example: player:getEnergyLevel()
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, getEnergyLevel);
+    /// Returns this PlayerSpaceship's energy capacity.
+    /// Example: player:getEnergyLevelMax()
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, getEnergyLevelMax);
 
-
+    /// Returns how much energy is consumed per second by this PlayerSpaceship's shields while active.
+    /// Example: player:getEnergyShieldUsePerSecond()
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, getEnergyShieldUsePerSecond);
+    /// Sets how much energy is consumed per second by this PlayerSpaceship's shields while active.
+    /// Example: player:setEnergyShieldUsePerSecond(1.5)
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, setEnergyShieldUsePerSecond);
+    /// Returns how much energy is consumed per second by this PlayerSpaceship's warp drive while in use.
+    /// Example: player:getEnergyWarpPerSecond()
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, getEnergyWarpPerSecond);
+    /// Sets how much energy is consumed per second by this PlayerSpaceship's warp drive while in use.
+    /// Example: player:setEnergyWarpPerSecond(1.7)
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, setEnergyWarpPerSecond);
 
-    /// Set the maximum coolant available to engineering. Default is 10.
+    /// Sets the maximum amount of coolant available to engineering on this PlayerSpaceship.
+    /// Defaults to 10, which by default allows engineering to set 100% coolant on one system.
+    /// Valid values are 0 or any positive number.
+    /// If the new limit is less than the coolant already distributed, this automatically reduces distribution percentages.
+    /// Example: player:setMaxCoolant(5) -- halves the amount of available coolant
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, setMaxCoolant);
+    /// Returns the maximum amount of coolant available to engineering on this PlayerSpaceship.
+    /// Example: player:getMaxCoolant()
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, getMaxCoolant);
 
+    /// Sets the number of scan probes stocked by this PlayerSpaceship.
+    /// Values are limited from 0 to the scan probe count max. Negative or excess values are capped to the limits.
+    /// Example: player:setScanProbeCount(20) -- sets the ship's scan probes to either 20 or the max limit, whichever is fewer
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, setScanProbeCount);
+    /// Returns the number of scan probes stocked by this PlayerSpaceship.
+    /// Example: player:getScanProbeCount()
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, getScanProbeCount);
+    /// Sets this PlayerSpaceship's capacity for scan probes.
+    /// Valid values are 0 or any positive number.
+    /// If the new limit is less than the current scan probe stock, this automatically reduces the stock.
+    /// Example: player:setMaxScanProbeCount(30) -- sets the ship's scan probe capacity to 30
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, setMaxScanProbeCount);
+    /// Returns this PlayerSpaceship's capacity for scan probes.
+    /// Example: player:getMaxScanProbeCount()
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, getMaxScanProbeCount);
 
-    /// add a custom Button to the according station. Use order to sort (shared with custom info).
+    /// Adds a custom interactive button with the given reference name to the given crew position screen.
+    /// By default, custom buttons and info are stacked in order of creation. Use the order value to specify a priority, with lower values appearing higher in the list.
+    /// If the reference name is unique, this creates a new button. If the reference name exists, this modifies the existing button.
+    /// The caption sets the button's text label.
+    /// When clicked, the button calls the given function.
+    /// Example:
+    /// -- Add a custom button to Engineering, lower in the order relative to other items, that prints the player ship's coolant max to the console or logging file when clicked
+    /// player:addCustomButton("engineering","get_coolant_max","Get Coolant Max",function() print("Coolant: " .. player:getMaxCoolant()) end,10)
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, addCustomButton);
-    /// add a custom Info Label to the according station. Use order to sort (shared with custom button).
+    /// Adds a custom non-interactive info label with the given reference name to the given crew position screen.
+    /// By default, custom buttons and info are stacked in order of creation. Use the order value to specify a priority.
+    /// If the reference name is unique, this creates a new info. If the reference name exists, this modifies the existing info.
+    /// The caption sets the info's text value.
+    /// Example:
+    /// -- Displays the coolant max value on Engineering at or near the top of the custom button/info order
+    /// player:addCustomInfo("engineering","show_coolant_max","Coolant Max: " .. player:getMaxCoolant(),0)
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, addCustomInfo);
+    /// Displays a dismissable message with the given reference name on the given crew position screen.
+    /// The caption sets the message's text.
+    /// Example:
+    /// -- Displays the coolant max value on Engineering as a dismissable message
+    /// player:addCustomMessage("engineering","message_coolant_max","Coolant max: " .. player:getMaxCoolant())
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, addCustomMessage);
+    /// As PlayerSpaceship:addCustomMessage(), but calls the given function when dismissed.
+    /// Example:
+    /// -- Displays the coolant max value on Engineering as a dismissable message, and prints "dismissed" to the console or logging file when dismissed
+    /// player:addCustomMessageWithCallback("engineering","message_coolant_max","Coolant max: " .. player:getMaxCoolant(),function() print("Dismissed!") end)
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, addCustomMessageWithCallback);
+    /// Removes the custom function, info, or message with the given reference name.
+    /// Example: player:removeCustom("show_coolant_max") -- removes the custom item named "show_coolant_max"
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, removeCustom);
 
+    /// Returns the index of the ESystem targeted by this PlayerSpaceship's weapons.
+    /// Returns -1 for the hull.
+    /// Example: player:getBeamSystemTarget()
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, getBeamSystemTarget);
-    /// Gets the name of the target system, instead of the ID
+    /// Returns the name of the ESystem targeted by this PlayerSpaceship's weapons.
+    /// Returns "UNKNOWN" for the hull.
+    /// Example: player:getBeamSystemTargetName()
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, getBeamSystemTargetName);
 
-    // Command functions
+    /// Commands this PlayerSpaceship to set a new target rotation.
+    /// A value of 0 is equivalent to a heading of 90 degrees ("east").
+    /// Accepts 0, positive, or negative values.
+    /// To objectively rotate the PlayerSpaceship as a SpaceObject, rather than commanding it to turn using its maneuverability, use SpaceObject:setRotation().
+    /// Examples:
+    /// player:commandTargetRotation(0) -- command the ship toward a heading of 90 degrees
+    /// heading = 180; player:commandTargetRotation(heading - 90) -- command the ship toward a heading of 180 degrees
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandTargetRotation);
+    /// Commands this PlayerSpaceship to request a new impulse speed.
+    /// Valid values are -1.0 (-100%; full reverse) to 1.0 (100%; full forward).
+    /// The ship's impulse value remains bound by its impulse acceleration rates.
+    /// Example: player:commandImpulse(0.5) -- command this ship to engage forward half impulse
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandImpulse);
+    /// Commands this PlayerSpaceship to request a new warp level.
+    /// Valid values are any positive integer, or 0.
+    /// Warp controls on crew position screens are limited to 4.
+    /// Example: player:commandWarp(2) -- activate the warp drive at level 2
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandWarp);
+    /// Commands this PlayerSpaceship to request a jump of the given distance.
+    /// Valid values are any positive number, or 0, including values outside of the ship's minimum and maximum jump ranges.
+    /// A jump of a greater distance than the ship's maximum jump range results in a negative jump drive charge.
+    /// Example: player:commandJump(25000) -- initiate a 25U jump on the current heading
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandJump);
+    /// Commands this PlayerSpaceship to set its weapons target to the given SpaceObject.
+    /// Example: player:commandSetTarget(enemy)
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandSetTarget);
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandNextTarget);
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandPreviousTarget);
+    /// Commands this PlayerSpaceship to load the WeaponTube with the given index with the given weapon type.
+    /// This command respects tube allow/disallow limits.
+    /// Example: player:commandLoadTube(0,"HVLI")
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandLoadTube);
+    /// Commands this PlayerSpaceship to unload the WeaponTube with the given index.
+    /// Example: player:commandUnloadTube(0)
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandUnloadTube);
+    /// Commands this PlayerSpaceship to fire the WeaponTube with the given index at the given missile target angle in degrees, without a weapons target.
+    /// The target angle behaves as if the Weapons crew had unlocked targeting and manually aimed its trajectory.
+    /// A target angle value of 0 is equivalent to a heading of 90 degrees ("east").
+    /// Accepts 0, positive, or negative values.
+    /// Examples:
+    /// player:commandFireTube(0,0) -- command firing tube 0 at a heading 90
+    /// target_heading = 180; player:commandFireTube(0,target_heading - 90) -- command firing tube 0 at a heading 180
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandFireTube);
+    /// Commands this PlayerSpaceship to fire the given weapons tube with the given SpaceObject as its target.
+    /// Example: player:commandFireTubeAtTarget(0,enemy) -- command firing tube 0 at target `enemy`
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandFireTubeAtTarget);
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandFireTubeAtCurrentTarget);
-    REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandSetShields);
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandCalibrateShields);
+    /// Commands this PlayerSpaceship to raise (true) or lower (false) its shields.
+    /// Example: player:commandSetShields(true) -- command raising shields
+    REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandSetShields);
+    /// Commands this PlayerSpaceship to change its Main Screen view to the given setting.
+    /// Example: player:commandMainScreenSetting("tactical") -- command setting the main screen view to tactical radar
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandMainScreenSetting);
+    /// Commands this PlayerSpaceship to change its Main Screen comms overlay to the given setting.
+    /// Example: player:commandMainScreenOverlay("hidecomms") -- command setting the main screen view to hide the comms overlay
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandMainScreenOverlay);
+    /// Commands this PlayerSpaceship to initiate a scan of the given SpaceObject.
+    /// If the scanning mini-game is enabled, this opens it on the relevant crew screens.
+    /// This command does NOT respect the player's ability to select the object for scanning, whether due to it being out of radar range or otherwise untargetable.
+    /// Example: player:commandScan(enemy)
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandScan);
-    /// Set power of the system to e.g. 1.5 ("150 percent")
+    /// Commands this PlayerSpaceship to set the power level of the given system.
+    /// Valid values are 0 or greater, with 1.0 equivalent to 100 percent. Values greater than 1.0 are allowed.
+    /// Example: player:commandSetSystemPowerRequest("impulse",1.0) -- command setting the impulse drive power to 100%
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandSetSystemPowerRequest);
+    /// Commands this PlayerSpaceship to set the coolant level of the given system.
+    /// Valid values are from 0 to 10.0, with 10.0 equivalent to 100 percent.
+    /// Values greater than 10.0 are allowed if the ship's coolant max is greater than 10.0, but controls on crew position screens are limited to 10.0 (100%).
+    /// Example: player:commandSetSystemCoolantRequest("impulse",10.0) -- command setting the impulse drive coolant to 100%
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandSetSystemCoolantRequest);
+    /// Commands this PlayerSpaceship to initiate docking with the given SpaceObject.
+    /// This initiates docking only if the target is dockable and within docking range.
+    /// Example: player:commandDock(base)
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandDock);
+    /// Commands this PlayerSpaceship to undock from any SpaceObject it's docked with.
+    /// Example: player:commandUndock()
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandUndock);
+    /// Commands this PlayerSpaceship to abort an in-progress docking operation.
+    /// Example: player:commandAbortDock()
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandAbortDock);
+    /// Commands this PlayerSpaceship to hail the given SpaceObject.
+    /// If the target object is a PlayerSpaceship or the GM is intercepting all comms, open text chat comms.
+    /// Example: player:commandOpenTextComm(base)
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandOpenTextComm);
+    /// Commands this PlayerSpaceship to close comms.
+    /// Example: player:commandCloseTextComm()
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandCloseTextComm);
+    /// Commands whether this PlayerSpaceship answers (true) or rejects (false) an incoming hail.
+    /// Example: player:commandAnswerCommHail(false) -- commands to reject an active incoming hail
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandAnswerCommHail);
+    /// Commands this PlayerSpaceship to select the reply with the given index during a comms dialogue.
+    /// Example: player:commandSendComm(0) -- commands to select the first option in a comms dialogue
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandSendComm);
+    /// Commands this PlayerSpaceship to send the given message to the active text comms chat.
+    /// This works whether the chat is with another PlayerSpaceship or the GM.
+    /// Example: player:commandSendCommPlayer("I will destroy you!") -- commands to send this message in the active text chat
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandSendCommPlayer);
-    /// Command repair crews to automatically move to damaged subsystems.
-    /// is command on ships to require less player interaction, especially
-    /// when combined with setAutoCoolant/auto_coolant_enabled.
+    /// Commands whether repair crews on this PlayerSpaceship automatically move to rooms of damaged systems.
+    /// Use this command to reduce the need for player interaction in Engineering, especially when combined with setAutoCoolant/auto_coolant_enabled.
+    /// Crews set to move automatically don't respect crew collisions, allowing multiple crew to occupy a single space.
+    /// Example: player:commandSetAutoRepair(true)
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandSetAutoRepair);
+    /// Commands this PlayerSpaceship to set its beam frequency to the given value.
+    /// Valid values are 0 to 20, which map to 400THz to 800THz at 20THz increments. (spaceship.cpp frequencyToString())
+    /// Example: player:commandSetAutoRepair(true)
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandSetBeamFrequency);
+    /// Commands this PlayerSpaceship to target the given ship system with its beam weapons.
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandSetBeamSystemTarget);
+    /// Sets this SpaceShip's shield frequency index.
+    /// To convert the index to the value used by players, multiply it by 20, then add 400.
+    /// Valid values are 0 (400THz) to 20 (800THz).
+    /// Unlike SpaceShip:setShieldsFrequency(), this initiates shield calibration to change the frequency, which disables shields for a period.
+    /// Example:
+    /// frequency = ship:setShieldsFrequency(10) -- frequency is 600THz
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandSetShieldFrequency);
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandSetShieldFrequencySelection);
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandSetNextShieldFrequencySelection);
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandSetPreviousShieldFrequencySelection);
+    /// Commands this PlayerSpaceship to add a waypoint at the given coordinates.
+    /// This respects the 9-waypoint limit and won't add more waypoints if 9 already exist.
+    /// Example: player:commandAddWaypoint(1000,2000)
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandAddWaypoint);
+    /// Commands this PlayerSpaceship to remove the waypoint with the given index.
+    /// This uses a 0-index, while waypoints are numbered on player screens with a 1-index.
+    /// Example: player:commandRemoveWaypoint(0) -- removes waypoint 1
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandRemoveWaypoint);
+    /// Commands this PlayerSpaceship to move the waypoint with the given index to the given coordinates.
+    /// This uses a 0-index, while waypoints are numbered on player screens with a 1-index.
+    /// Example: player:commandMoveWaypoint(0,-1000,-2000) -- moves waypoint 1 to -1000,-2000
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandMoveWaypoint);
+    /// Commands this PlayerSpaceship to activate its self-destruct sequence.
+    /// Example: player:commandActivateSelfDestruct()
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandActivateSelfDestruct);
+    /// Commands this PlayerSpaceship to cancel its self-destruct sequence.
+    /// Example: player:commandCancelSelfDestruct()
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandCancelSelfDestruct);
+    /// Commands this PlayerSpaceship to submit the given self-destruct authorization code for the code request with the given index.
+    /// Codes are 0-indexed. Index 0 corresponds to code A, 1 to B, etc.
+    /// Example: player:commandConfirmDestructCode(0,46223) -- commands submitting 46223 as self-destruct confirmation code A
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandConfirmDestructCode);
     // Confirm all self destruct codes without actually entering the codes
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandConfirmSelfDestruct);
+    /// Commands this PlayerSpaceship to set its forward combat maneuver to the given value.
+    /// Valid values are any from -1.0 (full reverse) to 1.0 (full forward).
+    /// The maneuver continues until the ship's combat maneuver reserves are depleted.
+    /// Crew screens allow only forward combat maneuvers, and the combat maneuver controls do not reflect a boost set via this command.
+    /// Example: player:commandCombatManeuverBoost(0.5) -- commands boosting forward at half combat maneuver capacity
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandCombatManeuverBoost);
+    /// Commands this PlayerSpaceship to launch a ScanProbe to the given coordinates.
+    /// Example: player:commandLaunchProbe(1000,2000) -- commands launching a scan probe to 1000,2000
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandLaunchProbe);
-    /// Command the science screen to link to the given ScanProbe object.
-    /// This is equivalent of selecting a probe on Relay and clicking
-    /// "Link to Science".
-    /// Example: player:commandSetScienceLink(probeObject)
+    /// Commands this PlayerSpaceship to link the science screen to the given ScanProbe.
+    /// This is equivalent to selecting a probe on Relay and clicking "Link to Science".
+    /// Unlike "Link to Science", this function can link science to any given probe, regardless of which ship launched it or what faction it belongs to.
+    /// Example: player:commandSetScienceLink(probe_object) -- link ScanProbe `probe` to this ship's science
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandSetScienceLink);
-    /// Command the science screen to clear its link to any ScanProbe object.
-    /// This is equivalent to clicking "Link to Science" on Relay when a link
-    /// is already active.
+    /// Commands this PlayerSpaceship to unlink the science screen from any ScanProbe.
+    /// This is equivalent to clicking "Link to Science" on Relay when a link is already active.
     /// Example: player:commandClearScienceLink()
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandClearScienceLink);
+    /// Commands this PlayerSpaceship to set the given alert level.
+    /// Valid values are "normal", "yellow", "red", which differ from the values returned by PlayerSpaceship:getAlertLevel().
+    /// Example: player:commandSetAlertLevel("red") -- commands red alert
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandSetAlertLevel);
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandSetAimLock);
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandSetAimAngle);
@@ -150,110 +351,115 @@ REGISTER_SCRIPT_SUBCLASS(PlayerSpaceship, SpaceShip)
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, commandSelectSystem);
 
 
-    /// Return the number of Engineering repair crews on the ship.
+    /// Returns the number of repair crews on this PlayerSpaceship.
+    /// Example: player:getRepairCrewCount()
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, getRepairCrewCount);
-    /// Set the total number of Engineering repair crews. If this value is less
-    /// than the number of repair crews, this function removes repair crews.
-    /// If the value is greater, it adds new repair crews at random locations.
+    /// Sets the total number of repair crews on this PlayerSpaceship.
+    /// If the value is less than the number of repair crews, this function removes repair crews.
+    /// If the value is greater, this function adds new repair crews into random rooms.
+    /// Example: player:setRepairCrewCount(5)
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, setRepairCrewCount);
-    /// Sets whether automatic coolant distribution is enabled. This sets the
-    /// amount of coolant proportionally to the amount of heat in that system.
-    /// Use this command on ships to require less player interaction, especially
-    /// when combined with commandSetAutoRepair/auto_repair_enabled.
+    /// Defines whether automatic coolant distribution is enabled on this PlayerSpaceship.
+    /// If true, coolant is automatically distributed proportionally to the amount of heat in that system.
+    /// Use this command to reduce the need for player interaction in Engineering, especially when combined with commandSetAutoRepair/auto_repair_enabled.
+    /// Example: player:setAutoCoolant(true)
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, setAutoCoolant);
-    /// Set a password to join the ship.
+    /// Sets a control code password required for a player to join this PlayerSpaceship.
+    /// Control codes are case-insensitive.
+    /// Example: player:setControlCode("abcde") -- matches "abcde", "ABCDE", "aBcDe"
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, setControlCode);
-    /// Callback when this ship launches a probe.
+    /// Defines a function to call when this PlayerSpaceship launches a probe.
     /// Passes the launching PlayerSpaceship and launched ScanProbe.
     /// Example:
+    /// -- Prints probe launch details to the console output or logging file
     /// player:onProbeLaunch(function (player, probe)
     ///     print("Probe " .. probe:getCallSign() .. " launched from ship " .. player:getCallSign())
     /// end)
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, onProbeLaunch);
-    /// Callback when this ship links a probe to the Science screen.
+    /// Defines a function to call when this PlayerSpaceship links a probe to the science screen.
     /// Passes the PlayerShip and linked ScanProbe.
     /// Example:
+    /// -- Prints probe linking details to the console output or logging file
     /// player:onProbeLink(function (player, probe)
     ///     print("Probe " .. probe:getCallSign() .. " linked to Science on ship " .. player:getCallSign())
     /// end)
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, onProbeLink);
-    /// Callback when this ship unlinks a probe on the Science screen.
+    /// Defines a function to call when this PlayerSpaceship unlinks a probe from the science screen.
     /// Passes the PlayerShip and previously linked ScanProbe.
-    /// Does _not_ fire when the probe is destroyed or expires;
-    /// see ScanProbe:onDestruction() and ScanProbe:onExpiration().
+    /// This function is not called when the probe is destroyed or expires.
+    /// See ScanProbe:onDestruction() and ScanProbe:onExpiration().
     /// Example:
+    /// -- Prints probe unlinking details to the console output or logging file
     /// player:onProbeUnlink(function (player, probe)
     ///     print("Probe " .. probe:getCallSign() .. " unlinked from Science on ship " .. player:getCallSign())
     /// end)
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, onProbeUnlink);
+    /// Returns this PlayerSpaceship's long-range radar range.
+    /// Example: player:getLongRangeRadarRange()
     REGISTER_SCRIPT_CLASS_FUNCTION(ShipTemplateBasedObject, getLongRangeRadarRange);
+    /// Returns this PlayerSpaceship's short-range radar range.
+    /// Example: player:getShortRangeRadarRange()
     REGISTER_SCRIPT_CLASS_FUNCTION(ShipTemplateBasedObject, getShortRangeRadarRange);
+    /// Sets this PlayerSpaceship's long-range radar range.
+    /// PlayerSpaceships use this range on the science and operations screens' radar.
+    /// Example: player:setLongRangeRadarRange(30000) -- sets the ship's long-range radar range to 30U
     REGISTER_SCRIPT_CLASS_FUNCTION(ShipTemplateBasedObject, setLongRangeRadarRange);
+    /// Sets this PlayerSpaceship's short-range radar range.
+    /// PlayerSpaceships use this range on the helms, weapons, and single pilot screens' radar.
+    /// This also defines the shared radar radius on the relay screen for friendly ships and stations, and how far into nebulae that this SpaceShip can detect objects.
+    /// Example: player:setShortRangeRadarRange(5000) -- sets the ship's long-range radar range to 5U
     REGISTER_SCRIPT_CLASS_FUNCTION(ShipTemplateBasedObject, setShortRangeRadarRange);
-    /// Set whether the object can scan other objects.
-    /// Requires a Boolean value.
-    /// Example: ship:setCanScan(true)
+    /// Defines whether scanning features appear on related crew screens in this PlayerSpaceship.
+    /// Example: player:setCanScan(true)
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, setCanScan);
-    /// Get whether the object can scan other objects.
-    /// Returns a Boolean value.
-    /// Example: ship:getCanScan()
+    /// Returns whether scanning features appear on related crew screens in this PlayerSpaceship.
+    /// Example: player:getCanScan()
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, getCanScan);
-    /// Set whether the object can hack other objects.
-    /// Requires a Boolean value.
-    /// Example: ship:setCanHack(true)
+    /// Defines whether hacking features appear on related crew screens in thisPlayerSpaceship.
+    /// Example: player:setCanHack(true)
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, setCanHack);
-    /// Get whether the object can hack other objects.
-    /// Returns a Boolean value.
-    /// Example: ship:getCanHack()
+    /// Returns whether hacking features appear on related crew screens in this PlayerSpaceship.
+    /// Example: player:getCanHack()
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, getCanHack);
-    /// Set whether the object can dock with other objects.
-    /// Requires a Boolean value.
-    /// Example: ship:setCanDock(true)
+    /// Defines whether the "Request Docking" button appears on related crew screens in this PlayerSpaceship.
+    /// This doesn't override any docking class restrictions set on a target SpaceShip.
+    /// Example: player:setCanDock(true)
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, setCanDock);
-    /// Get whether the object can dock with other objects.
-    /// Returns a Boolean value.
-    /// Example: ship:getCanDock()
+    /// Returns whether the "Request Docking" button appears on related crew screens in this PlayerSpaceship.
+    /// Example: player:getCanDock()
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, getCanDock);
-    /// Set whether the object can perform combat maneuvers.
-    /// Requires a Boolean value.
-    /// Example: ship:setCanCombatManeuver(true)
+    /// Defines whether combat maneuver controls appear on related crew screens in this PlayerSpaceship.
+    /// Example: player:setCanCombatManeuver(true)
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, setCanCombatManeuver);
-    /// Get whether the object can perform combat maneuvers.
-    /// Returns a Boolean value.
-    /// Example: ship:getCanCombatManeuver()
+    /// Returns whether combat maneuver controls appear on related crew screens in this PlayerSpaceship.
+    /// Example: player:getCanCombatManeuver()
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, getCanCombatManeuver);
-    /// Set whether the object can self destruct.
-    /// Requires a Boolean value.
-    /// Example: ship:setCanSelfDestruct(true)
-    REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, setCanSelfDestruct);
-    /// Get whether the object can self destruct.
-    /// This returns false if self destruct size and damage are both 0, even if
-    /// you set setCanSelfDestruct(true).
-    /// Returns a Boolean value.
-    /// Example: ship:getCanSelfDestruct()
-    REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, getCanSelfDestruct);
-    /// Set whether the object can launch probes.
-    /// Requires a Boolean value.
-    /// Example: ship:setCanLaunchProbe(true)
+    /// Defines whether ScanProbe-launching controls appear on related crew screens in this PlayerSpaceship.
+    /// Example: player:setCanLaunchProbe(true)
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, setCanLaunchProbe);
-    /// Get whether the object can launch probes.
-    /// Returns a Boolean value.
-    /// Example: ship:getCanLaunchProbe()
+    /// Returns whether ScanProbe-launching controls appear on related crew screens in this PlayerSpaceship.
+    /// Example: player:getCanLaunchProbe()
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, getCanLaunchProbe);
-    /// Set the amount of damage done by self destruction.
-    /// Requires a float; the value used is randomized +/- 33%.
-    /// Example: ship:setSelfDestructDamage(150)
+    /// Defines whether self-destruct controls appear on related crew screens in this PlayerSpaceship.
+    /// Example: player:setCanSelfDestruct(true)
+    REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, setCanSelfDestruct);
+    /// Returns whether self-destruct controls appear on related crew screens in this PlayerSpaceship.
+    /// This returns false if this ship's self-destruct size and damage are both 0, even if you set setCanSelfDestruct(true).
+    /// Example: player:getCanSelfDestruct()
+    REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, getCanSelfDestruct);
+    /// Sets the amount of damage done to nearby SpaceObjects when this PlayerSpaceship self-destructs.
+    /// Any given value is randomized +/- 33 percent upon self-destruction.
+    /// Example: player:setSelfDestructDamage(150)
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, setSelfDestructDamage);
-    /// Get the amount of damage done by self destruction.
-    /// Returns a float.
-    /// Example: ship:getSelfDestructDamage()
+    /// Returns the amount of base damage done to nearby SpaceObjects when this PlayerSpaceship self-destructs.
+    /// Example: player:getSelfDestructDamage()
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, getSelfDestructDamage);
-    /// Set the size of the explosion created by self destruction.
-    /// Requires a float.
-    /// Example: ship:setSelfDestructSize(1500)
+    /// Sets the radius of the explosion created when this PlayerSpaceship self-destructs.
+    /// All SpaceObjects within this radius are dealt damage upon self-destruction.
+    /// Example: player:setSelfDestructSize(1500) -- sets a 1.5U self-destruction explosion and damage radius
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, setSelfDestructSize);
-    /// Get the size of the explosion created by self destruction.
-    /// Returns a float.
+    /// Returns the radius of the explosion created when this PlayerSpaceship self-destructs.
+    /// All SpaceObjects within this radius are dealt damage upon self-destruction.
     /// Example: ship:getSelfDestructSize()
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, getSelfDestructSize);
 }
@@ -339,8 +545,8 @@ string alertLevelToLocaleString(EAlertLevel level)
 }
 
 // Configure ship's log packets.
-static inline sp::io::DataBuffer& operator << (sp::io::DataBuffer& packet, const PlayerSpaceship::ShipLogEntry& e) { return packet << e.prefix << e.text << e.color.r << e.color.g << e.color.b << e.color.a; }
-static inline sp::io::DataBuffer& operator >> (sp::io::DataBuffer& packet, PlayerSpaceship::ShipLogEntry& e) { packet >> e.prefix >> e.text >> e.color.r >> e.color.g >> e.color.b >> e.color.a; return packet; }
+static inline sp::io::DataBuffer& operator << (sp::io::DataBuffer& packet, const PlayerSpaceship::ShipLogEntry& e) { return packet << e.prefix << e.text << e.color.r << e.color.g << e.color.b << e.color.a << e.seq; }
+static inline sp::io::DataBuffer& operator >> (sp::io::DataBuffer& packet, PlayerSpaceship::ShipLogEntry& e) { packet >> e.prefix >> e.text >> e.color.r >> e.color.g >> e.color.b >> e.color.a >> e.seq; return packet; }
 
 REGISTER_MULTIPLAYER_CLASS(PlayerSpaceship, "PlayerSpaceship");
 PlayerSpaceship::PlayerSpaceship()
@@ -606,6 +812,18 @@ void PlayerSpaceship::update(float delta)
         // Consume power based on subsystem requests and state.
         energy_level += delta * getNetSystemEnergyUsage();
 
+        // Check how much coolant we have requested in total, and if that's beyond the
+        //  amount of coolant we have, see how much we need to adjust our request.
+        float total_coolant_request = 0.0f;
+        for(int n = 0; n < SYS_COUNT; n++)
+        {
+            if (!hasSystem(ESystem(n))) continue;
+            total_coolant_request += systems[n].coolant_request;
+        }
+        float coolant_request_factor = 1.0f;
+        if (total_coolant_request > max_coolant)
+            coolant_request_factor = max_coolant / total_coolant_request;
+
         for(int n = 0; n < SYS_COUNT; n++)
         {
             if (!hasSystem(ESystem(n))) continue;
@@ -623,17 +841,18 @@ void PlayerSpaceship::update(float delta)
                     systems[n].power_level = systems[n].power_request;
             }
 
-            if (systems[n].coolant_request > systems[n].coolant_level)
+            float coolant_request = systems[n].coolant_request * coolant_request_factor;
+            if (coolant_request > systems[n].coolant_level)
             {
                 systems[n].coolant_level += delta * systems[n].coolant_rate_per_second;
-                if (systems[n].coolant_level > systems[n].coolant_request)
-                    systems[n].coolant_level = systems[n].coolant_request;
+                if (systems[n].coolant_level > coolant_request)
+                    systems[n].coolant_level = coolant_request;
             }
-            else if (systems[n].coolant_request < systems[n].coolant_level)
+            else if (coolant_request < systems[n].coolant_level)
             {
                 systems[n].coolant_level -= delta * systems[n].coolant_rate_per_second;
-                if (systems[n].coolant_level < systems[n].coolant_request)
-                    systems[n].coolant_level = systems[n].coolant_request;
+                if (systems[n].coolant_level < coolant_request)
+                    systems[n].coolant_level = coolant_request;
             }
 
             // Add heat to overpowered subsystems.
@@ -642,7 +861,7 @@ void PlayerSpaceship::update(float delta)
 
         // If reactor health is worse than -90% and overheating, it explodes,
         // destroying the ship and damaging a 0.5U radius.
-        if (systems[SYS_Reactor].health < -0.9f && systems[SYS_Reactor].heat_level == 1.0f)
+        if (can_be_destroyed && systems[SYS_Reactor].health < -0.9f && systems[SYS_Reactor].heat_level == 1.0f)
         {
             ExplosionEffect* e = new ExplosionEffect();
             e->setSize(1000.0f);
@@ -670,7 +889,7 @@ void PlayerSpaceship::update(float delta)
         {
             // If warping, consume energy at a rate of 120% the warp request.
             // If shields are up, that rate is increased by an additional 50%.
-            if (!useEnergy(getEnergyWarpPerSecond() * delta * getSystemEffectiveness(SYS_Warp) * powf(current_warp, 1.2f) * (shields_active ? 1.5f : 1.0f)))
+            if (!useEnergy(getEnergyWarpPerSecond() * delta * getSystemEffectiveness(SYS_Warp) * powf(current_warp, 1.3f) * (shields_active ? 1.7f : 1.0f)))
                 // If there's not enough energy, fall out of warp.
                 warp_request = 0;
         }
@@ -803,71 +1022,11 @@ void PlayerSpaceship::takeHullDamage(float damage_amount, DamageInfo& info)
 void PlayerSpaceship::setMaxCoolant(float coolant)
 {
     max_coolant = std::max(coolant, 0.0f);
-    float total_coolant = 0;
-
-    for(int n = 0; n < SYS_COUNT; n++)
-    {
-        if (!hasSystem(ESystem(n))) continue;
-
-        total_coolant += systems[n].coolant_request;
-    }
-
-    if (total_coolant > max_coolant)
-    {
-        for(int n = 0; n < SYS_COUNT; n++)
-        {
-            if (!hasSystem(ESystem(n))) continue;
-
-            systems[n].coolant_request *= max_coolant / total_coolant;
-        }
-    } else {
-        if (total_coolant > 0)
-        {
-            for(int n = 0; n < SYS_COUNT; n++)
-            {
-                if (!hasSystem(ESystem(n))) continue;
-                systems[n].coolant_request = std::min(systems[n].coolant_request * max_coolant / total_coolant, (float) max_coolant_per_system);
-            }
-        }
-    }
 }
 
 void PlayerSpaceship::setSystemCoolantRequest(ESystem system, float request)
 {
     request = std::max(0.0f, std::min(request, std::min((float) max_coolant_per_system, max_coolant)));
-    // Set coolant levels on a system.
-    float total_coolant = 0;
-    int cnt = 0;
-    for(int n = 0; n < SYS_COUNT; n++)
-    {
-        if (!hasSystem(ESystem(n))) continue;
-        if (n == system) continue;
-
-        total_coolant += systems[n].coolant_request;
-        cnt++;
-    }
-    if (total_coolant > max_coolant - request)
-    {
-        for(int n = 0; n < SYS_COUNT; n++)
-        {
-            if (!hasSystem(ESystem(n))) continue;
-            if (n == system) continue;
-
-            systems[n].coolant_request *= (max_coolant - request) / total_coolant;
-        }
-    }else{
-        for(int n = 0; n < SYS_COUNT; n++)
-        {
-            if (!hasSystem(ESystem(n))) continue;
-            if (n == system) continue;
-
-            if (total_coolant > 0)
-                systems[n].coolant_request = std::min(systems[n].coolant_request * (max_coolant - request) / total_coolant, (float) max_coolant_per_system);
-            else
-                systems[n].coolant_request = std::min((max_coolant - request) / float(cnt), float(max_coolant_per_system));
-        }
-    }
-
     systems[system].coolant_request = request;
 }
 
@@ -999,7 +1158,7 @@ void PlayerSpaceship::addToShipLog(string message, glm::u8vec4 color)
         ships_log.erase(ships_log.begin());
 
     // Timestamp a log entry, color it, and add it to the end of the log.
-    ships_log.emplace_back(string(gameGlobalInfo->elapsed_time, 1) + string(": "), message, color);
+    ships_log.emplace_back(gameGlobalInfo->getMissionTime() + string(": "), message, color, last_log_seq++);
 }
 
 void PlayerSpaceship::addToShipLogBy(string message, P<SpaceObject> target)
@@ -1082,6 +1241,7 @@ void PlayerSpaceship::addCustomButton(ECrewPosition position, string name, strin
     csf.caption = caption;
     csf.callback = callback;
     csf.order = order.value_or(0);
+    std::stable_sort(custom_functions.begin(), custom_functions.end());
 }
 
 void PlayerSpaceship::addCustomInfo(ECrewPosition position, string name, string caption, std::optional<int> order)
@@ -1094,6 +1254,7 @@ void PlayerSpaceship::addCustomInfo(ECrewPosition position, string name, string 
     csf.crew_position = position;
     csf.caption = caption;
     csf.order = order.value_or(0);
+    std::stable_sort(custom_functions.begin(), custom_functions.end());
 }
 
 void PlayerSpaceship::addCustomMessage(ECrewPosition position, string name, string caption)
@@ -1105,6 +1266,7 @@ void PlayerSpaceship::addCustomMessage(ECrewPosition position, string name, stri
     csf.name = name;
     csf.crew_position = position;
     csf.caption = caption;
+    std::stable_sort(custom_functions.begin(), custom_functions.end());
 }
 
 void PlayerSpaceship::addCustomMessageWithCallback(ECrewPosition position, string name, string caption, ScriptSimpleCallback callback)
@@ -1117,6 +1279,7 @@ void PlayerSpaceship::addCustomMessageWithCallback(ECrewPosition position, strin
     csf.crew_position = position;
     csf.caption = caption;
     csf.callback = callback;
+    std::stable_sort(custom_functions.begin(), custom_functions.end());
 }
 
 void PlayerSpaceship::removeCustom(string name)
@@ -1860,7 +2023,7 @@ void PlayerSpaceship::onReceiveClientCommand(int32_t client_id, sp::io::DataBuff
         break;
     case CMD_HACKING_FINISHED:
         {
-            uint32_t id;
+            int32_t id;
             string target_system;
             packet >> id >> target_system;
             P<SpaceObject> obj = game_server->getObjectById(id);
@@ -1876,12 +2039,15 @@ void PlayerSpaceship::onReceiveClientCommand(int32_t client_id, sp::io::DataBuff
             {
                 if (csf.name == name)
                 {
-                    if (csf.type == CustomShipFunction::Type::Button || csf.type == CustomShipFunction::Type::Message)
+                    if (csf.type == CustomShipFunction::Type::Button)
                     {
-                        csf.callback.call<void>();
+                        auto cb = csf.callback;
+                        cb.call<void>();
                     }
-                    if (csf.type == CustomShipFunction::Type::Message)
+                    else if (csf.type == CustomShipFunction::Type::Message)
                     {
+                        auto cb = csf.callback;
+                        cb.call<void>();
                         removeCustom(name);
                     }
                     break;
@@ -2378,6 +2544,8 @@ void PlayerSpaceship::onReceiveServerCommand(sp::io::DataBuffer& packet)
 
 void PlayerSpaceship::drawOnGMRadar(sp::RenderTarget& renderer, glm::vec2 position, float scale, float rotation, bool long_range)
 {
+    if (docked_style == DockStyle::Internal) return;
+
     SpaceShip::drawOnGMRadar(renderer, position, scale, rotation, long_range);
 
     if (long_range)
@@ -2429,22 +2597,22 @@ string PlayerSpaceship::getExportLine()
             auto difference = std::fabs(current_factor - default_factor) > std::numeric_limits<float>::epsilon();
             if (difference)
             {
-                result += ":setSystemPowerFactor(" + string(system) + ", " + string(current_factor, 1) + ")";
+                result += ":setSystemPowerFactor(\"" + getSystemName(system) + "\", " + string(current_factor, 1) + ")";
             }
 
             if (std::fabs(getSystemCoolantRate(system) - ShipSystem::default_coolant_rate_per_second) > std::numeric_limits<float>::epsilon())
             {
-                result += ":setSystemCoolantRate(" + string(system) + ", " + string(getSystemCoolantRate(system), 2) + ")";
+                result += ":setSystemCoolantRate(\"" + getSystemName(system) + "\", " + string(getSystemCoolantRate(system), 2) + ")";
             }
 
             if (std::fabs(getSystemHeatRate(system) - ShipSystem::default_heat_rate_per_second) > std::numeric_limits<float>::epsilon())
             {
-                result += ":setSystemHeatRate(" + string(system) + ", " + string(getSystemHeatRate(system), 2) + ")";
+                result += ":setSystemHeatRate(\"" + getSystemName(system) + "\", " + string(getSystemHeatRate(system), 2) + ")";
             }
 
             if (std::fabs(getSystemPowerRate(system) - ShipSystem::default_power_rate_per_second) > std::numeric_limits<float>::epsilon())
             {
-                result += ":setSystemPowerRate(" + string(system) + ", " + string(getSystemPowerRate(system), 2) + ")";
+                result += ":setSystemPowerRate(\"" + getSystemName(system) + "\", " + string(getSystemPowerRate(system), 2) + ")";
             }
         }
     }

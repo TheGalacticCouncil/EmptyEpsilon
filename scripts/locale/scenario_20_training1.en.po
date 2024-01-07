@@ -4,14 +4,21 @@ msgstr ""
 
 # Scenario description
 msgid ""
-"Basic Training CourceObjective: Destroy all enemy ships in the area."
-"Description:During this training your will learn to coordinate the actions "
-"of your crew and destoy an Exuari training ground.Your ship is a Phobos "
-"light cruiser - the most common vessel in the navy.This is a short mission "
-"for inexperienced players."
+"Basic Training Cource\n"
+"\n"
+"Objective: Destroy all enemy ships in the area.\n"
+"\n"
+"Description:\n"
+"During this training your will learn to coordinate the actions of your crew "
+"and destoy an Exuari training ground.\n"
+"\n"
+"Your ship is a Phobos light cruiser - the most common vessel in the navy.\n"
+"\n"
+"This is a short mission for inexperienced players."
 msgstr ""
 
-#: scripts/scenario_20_training1.lua:78
+#: scripts/scenario_20_training1.lua:130
+msgctxt "goal-incCall"
 msgid ""
 "This is Commander Saberhagen.\n"
 "\n"
@@ -26,25 +33,25 @@ msgid ""
 "Commander Saberhagen out."
 msgstr ""
 
-#: scripts/scenario_20_training1.lua:96
-msgctxt "bonusTarget"
+#: scripts/scenario_20_training1.lua:148
+msgctxt "msgMainscreen-bonusTarget"
 msgid "escaped."
 msgstr ""
 
-#: scripts/scenario_20_training1.lua:98
-msgctxt "bonusTarget"
+#: scripts/scenario_20_training1.lua:150
+msgctxt "msgMainscreen-bonusTarget"
 msgid "destroyed."
 msgstr ""
 
-#: scripts/scenario_20_training1.lua:100
+#: scripts/scenario_20_training1.lua:152
 #, lua-format
-msgctxt "globalMsg"
+msgctxt "msgMainscreen"
 msgid ""
 "Mission Complete.\n"
 "Your Time: %d\n"
 "Bonus target %s\n"
 "\n"
-"If you feel ready for combat, play scenario 'quick basic'.\n"
+"If you feel ready for combat, play scenario 'Basic Battle'.\n"
 "If you want to try another ship, play the next training mission.\n"
 "\n"
 "If you need more practice, play this training again\n"

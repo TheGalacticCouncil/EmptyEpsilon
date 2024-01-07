@@ -6,11 +6,12 @@
 #include "gui/gui2_advancedscrolltext.h"
 #include "screenComponents/customShipFunctions.h"
 
+
 ShipLogScreen::ShipLogScreen(GuiContainer* owner)
 : GuiOverlay(owner, "SHIP_LOG_SCREEN", colorConfig.background)
 {
-    GuiAutoLayout* shiplog_layout = new GuiAutoLayout(this, "SHIPLOG_LAYOUT", GuiAutoLayout::LayoutHorizontalRightToLeft);
-    shiplog_layout->setPosition(50, 120)->setSize(GuiElement::GuiSizeMax, GuiElement::GuiSizeMax);
+    GuiElement* shiplog_layout = new GuiElement(this, "SHIPLOG_LAYOUT");
+    shiplog_layout->setPosition(50, 120)->setSize(GuiElement::GuiSizeMax, GuiElement::GuiSizeMax)->setAttribute("layout", "horizontalright");
     custom_function_sidebar= new GuiCustomShipFunctions(shiplog_layout, shipLog, "");
     custom_function_sidebar->setSize(270, GuiElement::GuiSizeMax);
     (new GuiOverlay(this, "", glm::u8vec4{255,255,255,255}))->setTextureTiled("gui/background/crosses.png");
@@ -39,12 +40,12 @@ void ShipLogScreen::onDraw(sp::RenderTarget& renderer)
             log_text->removeEntry(0);
         }
 
-        if (log_text->getEntryCount() > 0 && logs.size() > 0 && log_text->getEntryText(0) != logs[0].text)
+        if (log_text->getEntryCount() > 0 && logs.size() > 0 && log_text->getEntrySeq(0) != logs[0].seq)
         {
             bool updated = false;
             for(unsigned int n=1; n<log_text->getEntryCount(); n++)
             {
-                if (log_text->getEntryText(n) == logs[0].text)
+                if (log_text->getEntrySeq(n) == logs[0].seq)
                 {
                     for(unsigned int m=0; m<n; m++)
                         log_text->removeEntry(0);
@@ -59,7 +60,7 @@ void ShipLogScreen::onDraw(sp::RenderTarget& renderer)
         while(log_text->getEntryCount() < logs.size())
         {
             int n = log_text->getEntryCount();
-            log_text->addEntry(logs[n].prefix, logs[n].text, logs[n].color);
+            log_text->addEntry(logs[n].prefix, logs[n].text, logs[n].color, logs[n].seq);
         }
     }
 }

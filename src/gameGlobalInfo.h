@@ -104,15 +104,18 @@ public:
     void addScript(P<Script> script);
     //Reset the global game state (called when we want to load a new scenario, and clear out this one)
     void reset();
-    void startScenario(string filename);
+    void setScenarioSettings(const string filename, std::unordered_map<string, string> new_settings);
+    void startScenario(string filename, std::unordered_map<string, string> new_settings = {});
 
     virtual void update(float delta) override;
     virtual void destroy() override;
+    string getMissionTime();
 
     string getNextShipCallsign();
 };
 
 string getSectorName(glm::vec2 position);
+glm::vec2 sectorToXY(string sectorName);
 
 REGISTER_MULTIPLAYER_ENUM(EScanningComplexity);
 REGISTER_MULTIPLAYER_ENUM(EHackingGames);

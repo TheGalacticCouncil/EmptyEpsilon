@@ -92,7 +92,8 @@ public:
     /*!
      * List of ship classes that can dock with this ship. (only used for ship2ship docking)
      */
-    std::unordered_set<string> can_be_docked_by_class;
+    std::unordered_set<string> external_dock_classes;
+    std::unordered_set<string> internal_dock_classes;
     bool shares_energy_with_docked;
     bool repair_docked;
     bool restocks_scan_probes;
@@ -140,6 +141,8 @@ public:
     void setModel(string model_name);
     void setDefaultAI(string default_ai_name);
     void setDockClasses(const std::vector<string>& classes);
+    void setExternalDockClasses(const std::vector<string>& classes);
+    void setInternalDockClasses(const std::vector<string>& classes);
     void setSharesEnergyWithDocked(bool enabled);
     void setRepairDocked(bool enabled);
     void setRestocksScanProbes(bool enabled);
@@ -173,7 +176,7 @@ public:
     void setTubeSize(int index, EMissileSizes size);
 
     void setTubeDirection(int index, float direction);
-    void setHull(float amount) { hull = amount; }
+    void setHull(float amount) { if (amount < 0) return; hull = amount; };
     void setShields(const std::vector<float>& values);
     void setSpeed(float impulse, float turn, float acceleration, std::optional<float> reverse_speed, std::optional<float> reverse_acceleration);
     void setCombatManeuver(float boost, float strafe);

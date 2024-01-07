@@ -87,7 +87,7 @@ public:
     constexpr static float warp_charge_time = 4.0f;
     constexpr static float warp_decharge_time = 2.0f;
     constexpr static float jump_drive_charge_time = 90.0f;   /*<Total charge time for the jump drive after a max range jump */
-    constexpr static float jump_drive_energy_per_km_charge = 4.0f;
+    constexpr static float jump_drive_energy_per_km_charge = 2.0f;
     constexpr static float jump_drive_heat_per_jump = 0.35f;
     constexpr static float heat_per_combat_maneuver_boost = 0.2f;
     constexpr static float heat_per_combat_maneuver_strafe = 0.2f;
@@ -233,12 +233,14 @@ public:
     int32_t target_id;
 
     EDockingState docking_state;
+    DockStyle docked_style = DockStyle::None;
     P<SpaceObject> docking_target; //Server only
     glm::vec2 docking_offset{0, 0}; //Server only
 
     SpaceShip(string multiplayerClassName, float multiplayer_significant_range=-1);
     virtual ~SpaceShip();
 
+    virtual void draw3D() override;
     virtual void draw3DTransparent() override;
     /*!
      * Get this ship's radar signature dynamically modified by the state of its
@@ -295,7 +297,7 @@ public:
      * Check if object can dock with this ship.
      * \param object Object that wants to dock.
      */
-    virtual bool canBeDockedBy(P<SpaceObject> obj) override;
+    virtual DockStyle canBeDockedBy(P<SpaceObject> obj) override;
 
     virtual void collide(Collisionable* other, float force) override;
 
@@ -359,12 +361,11 @@ public:
 
     P<SpaceObject> getTarget();
 
-    virtual std::unordered_map<string, string> getGMInfo() override;
-
     bool isDocked(P<SpaceObject> target) { return docking_state == DS_Docked && docking_target == target; }
     P<SpaceObject> getDockedWith() { if (docking_state == DS_Docked) return docking_target; return NULL; }
     bool canStartDocking() { return current_warp <= 0.0f && (!has_jump_drive || jump_delay <= 0.0f); }
     EDockingState getDockingState() { return docking_state; }
+    virtual DockStyle getDockedStyle() override { return docked_style; }
     int getWeaponStorage(EMissileWeapons weapon) { if (weapon == MW_None) return 0; return weapon_storage[weapon]; }
     int getWeaponStorageMax(EMissileWeapons weapon) { if (weapon == MW_None) return 0; return weapon_storage_max[weapon]; }
     void setWeaponStorage(EMissileWeapons weapon, int amount) { if (weapon == MW_None) return; weapon_storage[weapon] = amount; }
@@ -468,7 +469,7 @@ public:
     float getBeamWeaponEnergyPerFire(int index) { if (index < 0 || index >= max_beam_weapons) return 0.0; return beam_weapons[index].getEnergyPerFire(); }
     float getBeamWeaponHeatPerFire(int index) { if (index < 0 || index >= max_beam_weapons) return 0.0; return beam_weapons[index].getHeatPerFire(); }
 
-    int getShieldsFrequency(void){ return shield_frequency; }
+    int getShieldsFrequency(){ return shield_frequency; }
     void setShieldsFrequency(int freq) { if ((freq > SpaceShip::max_frequency) || (freq < 0)) return; shield_frequency = freq;}
 
     int getBeamFrequency(){ return beam_frequency; }
@@ -542,6 +543,7 @@ REGISTER_MULTIPLAYER_ENUM(EWeaponTubeState);
 REGISTER_MULTIPLAYER_ENUM(EMainScreenSetting);
 REGISTER_MULTIPLAYER_ENUM(EMainScreenOverlay);
 REGISTER_MULTIPLAYER_ENUM(EDockingState);
+REGISTER_MULTIPLAYER_ENUM(DockStyle);
 REGISTER_MULTIPLAYER_ENUM(EScannedState);
 
 string frequencyToString(int frequency);

@@ -3,12 +3,14 @@
 
 #include "gui2_element.h"
 
+
+class GuiThemeStyle;
 class GuiKeyValueDisplay : public GuiElement
 {
 public:
     GuiKeyValueDisplay(GuiContainer* owner, const string& id, float div_distance, const string& key, const string& value);
 
-    virtual void onDraw(sp::RenderTarget& target) override;
+    virtual void onDraw(sp::RenderTarget& renderer) override;
 
     GuiKeyValueDisplay* setKey(const string& key);
     GuiKeyValueDisplay* setValue(const string& value);
@@ -17,6 +19,10 @@ public:
     GuiKeyValueDisplay* setIcon(const string& icon_texture);
 
 private:
+    const GuiThemeStyle* back_style;
+    const GuiThemeStyle* key_style;
+    const GuiThemeStyle* value_style;
+
     string key;
     string value;
     string icon_texture;

@@ -11,8 +11,8 @@
 #include "screenComponents/shipsLogControl.h"
 #include "screenComponents/hackingDialog.h"
 #include "screenComponents/customShipFunctions.h"
+#include "screenComponents/alertLevelButton.h"
 
-#include "gui/gui2_autolayout.h"
 #include "gui/gui2_keyvaluedisplay.h"
 #include "gui/gui2_selector.h"
 #include "gui/gui2_slider.h"
@@ -75,8 +75,8 @@ RelayScreen::RelayScreen(GuiContainer* owner, bool allow_comms)
     if (my_spaceship)
         radar->setViewPosition(my_spaceship->getPosition());
 
-    GuiAutoLayout* sidebar = new GuiAutoLayout(this, "SIDE_BAR", GuiAutoLayout::LayoutVerticalTopToBottom);
-    sidebar->setPosition(-20, 150, sp::Alignment::TopRight)->setSize(250, GuiElement::GuiSizeMax);
+    auto sidebar = new GuiElement(this, "SIDE_BAR");
+    sidebar->setPosition(-20, 150, sp::Alignment::TopRight)->setSize(250, GuiElement::GuiSizeMax)->setAttribute("layout", "vertical");
 
     info_callsign = new GuiKeyValueDisplay(sidebar, "SCIENCE_CALLSIGN", 0.4, tr("Callsign"), "");
     info_callsign->setSize(GuiElement::GuiSizeMax, 30);
@@ -93,8 +93,8 @@ RelayScreen::RelayScreen(GuiContainer* owner, bool allow_comms)
     zoom_label->setSize(GuiElement::GuiSizeMax, GuiElement::GuiSizeMax);
 
     // Option buttons for comms, waypoints, and probes.
-    option_buttons = new GuiAutoLayout(this, "BUTTONS", GuiAutoLayout::LayoutVerticalTopToBottom);
-    option_buttons->setPosition(20, 50, sp::Alignment::TopLeft)->setSize(250, GuiElement::GuiSizeMax);
+    option_buttons = new GuiElement(this, "BUTTONS");
+    option_buttons->setPosition(20, 50, sp::Alignment::TopLeft)->setSize(250, GuiElement::GuiSizeMax)->setAttribute("layout", "vertical");
 
     // Open comms button.
     if (allow_comms == true)
@@ -155,33 +155,7 @@ RelayScreen::RelayScreen(GuiContainer* owner, bool allow_comms)
     info_clock = new GuiKeyValueDisplay(option_buttons, "INFO_CLOCK", 0.4f, tr("Clock") + ":", "");
     info_clock->setSize(GuiElement::GuiSizeMax, 40);
 
-    // Bottom layout.
-    GuiAutoLayout* layout = new GuiAutoLayout(this, "", GuiAutoLayout::LayoutVerticalBottomToTop);
-    layout->setPosition(-20, -70, sp::Alignment::BottomRight)->setSize(300, GuiElement::GuiSizeMax);
-
-    // Alert level buttons.
-    alert_level_button = new GuiToggleButton(layout, "", tr("Alert level"), [this](bool value)
-    {
-        for(GuiButton* button : alert_level_buttons)
-            button->setVisible(value);
-    });
-    alert_level_button->setValue(false);
-    alert_level_button->setSize(GuiElement::GuiSizeMax, 50);
-
-    for(int level=AL_Normal; level < AL_MAX; level++)
-    {
-        GuiButton* alert_button = new GuiButton(layout, "", alertLevelToLocaleString(EAlertLevel(level)), [this, level]()
-        {
-            if (my_spaceship)
-                my_spaceship->commandSetAlertLevel(EAlertLevel(level));
-            for(GuiButton* button : alert_level_buttons)
-                button->setVisible(false);
-            alert_level_button->setValue(false);
-        });
-        alert_button->setVisible(false);
-        alert_button->setSize(GuiElement::GuiSizeMax, 50);
-        alert_level_buttons.push_back(alert_button);
-    }
+    (new GuiAlertLevelSelect(this, ""))->setPosition(-20, -70, sp::Alignment::BottomRight)->setSize(300, GuiElement::GuiSizeMax)->setAttribute("layout", "verticalbottom");
 
     (new GuiCustomShipFunctions(this, relayOfficer, ""))->setPosition(-20, 240, sp::Alignment::TopRight)->setSize(250, GuiElement::GuiSizeMax);
 
@@ -277,14 +251,16 @@ void RelayScreen::onDraw(sp::RenderTarget& renderer)
 
         info_callsign->setValue(obj->getCallSign());
 
-        if (ship)
-        {
-            if (ship->getScannedStateFor(my_spaceship) >= SS_SimpleScan)
+        if (factionInfo[obj->getFactionId()]) {
+            if (ship)
             {
+                if (ship->getScannedStateFor(my_spaceship) >= SS_SimpleScan)
+                {
+                    info_faction->setValue(factionInfo[obj->getFactionId()]->getLocaleName());
+                }
+            }else{
                 info_faction->setValue(factionInfo[obj->getFactionId()]->getLocaleName());
             }
-        }else{
-            info_faction->setValue(factionInfo[obj->getFactionId()]->getLocaleName());
         }
 
         if (probe && my_spaceship && probe->owner_id == my_spaceship->getMultiplayerId() && probe->canBeTargetedBy(my_spaceship))
@@ -313,11 +289,15 @@ void RelayScreen::onDraw(sp::RenderTarget& renderer)
     {
         // Toggle ship capabilities.
         launch_probe_button->setVisible(my_spaceship->getCanLaunchProbe());
+        launch_probe_button->setEnable(my_spaceship->scan_probe_stock > 0);
         link_to_science_button->setVisible(my_spaceship->getCanLaunchProbe());
         hack_target_button->setVisible(my_spaceship->getCanHack());
 
         info_reputation->setValue(string(my_spaceship->getReputationPoints(), 0));
-        info_clock->setValue(string(gameGlobalInfo->elapsed_time, 0));
+
+        // Update mission clock
+        info_clock->setValue(gameGlobalInfo->getMissionTime());
+
         launch_probe_button->setText(tr("Launch Probe") + " (" + string(my_spaceship->scan_probe_stock) + ")");
     }
 

@@ -1,4 +1,4 @@
--- Name: Basic
+-- Name: Basic Battle
 -- Description: A few random stations are under attack by enemies, with random terrain around them. Destroy all enemies to win.
 ---
 --- The scenario provides a single player-controlled Atlantis, which is sufficient to win even in the "Extreme" variant.
@@ -18,7 +18,7 @@
 -- Time[60min]: Automatic loss after 60 minutes
 -- Setting[PlayerShip]: Sets the default player ship
 -- PlayerShip[Atlantis|Default]: Powerful ship with sidewards missile tubes. Requires more advanced play.
--- PlayerShip[Phobos M3P]: Simpler, less powerful ship. But easier to handler. Recommended for new crews.
+-- PlayerShip[Phobos M3P]: Simpler, less powerful ship. But easier to handle. Recommended for new crews.
 
 --- Scenario
 -- @script scenario_00_basic
@@ -202,8 +202,8 @@ end
 --- Initializes main GM Menu
 function gmButtons()
     clearGMFunctions()
-    addGMFunction("+Named Waves",namedWaves)
-    addGMFunction("Random wave",function()
+    addGMFunction(_("buttonGM", "+Named Waves"),namedWaves)
+    addGMFunction(_("buttonGM", "Random wave"),function()
         addWave(
             enemyList,
             random(0,10),
@@ -214,7 +214,7 @@ function gmButtons()
     
     -- Let the GM spawn random reinforcements. Their distance from the
     -- players' spawn point is about half that of enemy waves.
-    addGMFunction("Random friendly", function()
+    addGMFunction(_("buttonGM", "Random friendly"), function()
         local friendlyShip = {"Phobos T3", "MU52 Hornet", "Piranha F12"}
         local friendlyShipIndex = math.random(#friendlyShip)
         
@@ -235,30 +235,30 @@ function gmButtons()
     addGMPositionToggle()
     
     -- End scenario with Human Navy (players) victorious.
-    addGMFunction("Win",gmVictoryYesNo)
+    addGMFunction(_("buttonGM", "Win"),gmVictoryYesNo)
 end
 
 --- Shows Yes/No question dialogue GM submenu with question if Human Navy should win. 
 function gmVictoryYesNo()
     clearGMFunctions()
-    addGMFunction("Victory?", function() string.format("") end)
-    addGMFunction("Yes", function() 
+    addGMFunction(_("buttonGM", "Victory?"), function() string.format("") end)
+    addGMFunction(_("buttonGM", "Yes"), function() 
         victory("Human Navy")
         clearGMFunctions()
-        addGMFunction("Players have won", function() string.format("") end)
-        addGMFunction("Scenario ended", function() string.format("") end)
+        addGMMessage(_("msgGM", [[Players have won.
+Scenario ended.]]))
     end)
-    addGMFunction("No", gmButtons)
+    addGMFunction(_("buttonGM", "No"), gmButtons)
 end
 
 --- Generate GM Toggle button for changing wave positioning variant. 
 function addGMPositionToggle()
-    local name = "Position: "
+    local name = _("buttonGM", "Position: ")
 
     if(addWavesToGMPosition) then
-        name = name.."GM"
+        name = name.._("buttonGM", "GM")
     else
-        name = name.."Random"
+        name = name.._("buttonGM", "Random")
     end
 
     addGMFunction(name, function()
@@ -271,16 +271,16 @@ end
 --- Shows "Named waves" GM submenu (that allows spawning more waves).
 function namedWaves()
     local wave_names = {
-        [0] = "Strikeship",
-        [1] = "Fighter",
-        [2] = "Gunship",
-        [4] = "Dreadnought",
-        [5] = "Missile Cruiser",
-        [6] = "Cruiser",
-        [9] = "Adv. striker",
+        [0] = _("buttonGM", "Strikeship"),
+        [1] = _("buttonGM", "Fighter"),
+        [2] = _("buttonGM", "Gunship"),
+        [4] = _("buttonGM", "Dreadnought"),
+        [5] = _("buttonGM", "Missile Cruiser"),
+        [6] = _("buttonGM", "Cruiser"),
+        [9] = _("buttonGM", "Adv. striker"),
     }
     clearGMFunctions()
-    addGMFunction("-From Named Waves",gmButtons)
+    addGMFunction(_("buttonGM", "-From Named Waves"),gmButtons)
     for index, name in pairs(wave_names) do
         addGMFunction(name,function()
             string.format("")
@@ -294,6 +294,9 @@ function init()
     -- Spawn a player Atlantis.
     player = PlayerSpaceship():setFaction("Human Navy"):setTemplate(getScenarioSetting("PlayerShip"))
     player:setCallSign(ship_names[irandom(1, #ship_names)])
+    if not player:hasWarpDrive() and not player:hasJumpDrive() then
+        player:setWarpDrive(true)
+    end
 
     enemyList = {}
     friendlyList = {}
@@ -377,7 +380,7 @@ function init()
     }
     gametimeleft = timesetting[getScenarioSetting("Time")]
     if gametimeleft ~= nil then
-        timewarning = gametimeleft
+        timewarning = gametimeleft - 5 * 60
     end
 
     -- If not in the Empty variation, spawn the corresponding number of random
@@ -401,7 +404,7 @@ function init()
             local dx1, dy1 = vectorFromAngle(a2, random(-1000, 1000))
             local dx2, dy2 = vectorFromAngle(a2 + 90, random(-20000, 20000))
             local posx = x + dx1 + dx2
-            local posy = x + dy1 + dy2
+            local posy = y + dy1 + dy2
             -- Avoid spawning asteroids within 1U of the player start position or
             -- 2U of any station.
             if math.abs(posx) > 1000 and math.abs(posy) > 1000 then
@@ -413,7 +416,7 @@ function init()
             end
         end
 
-        for j_ = 1, 100 do
+        for j_ = 1, 50 do
             local dx1, dy1 = vectorFromAngle(a2, random(-1500, 1500))
             local dx2, dy2 = vectorFromAngle(a2 + 90, random(-20000, 20000))
             VisualAsteroid():setPosition(x + dx1 + dx2, y + dy1 + dy2)
@@ -469,7 +472,7 @@ function init()
     local station = friendlyList[1]
     if gametimeleft ~= nil then
         station:sendCommsMessage(
-            player, string.format(_([[%s, your objective is to fend off the incoming Kraylor attack.
+            player, string.format(_("goal-incCall", [[%s, your objective is to fend off the incoming Kraylor attack.
 
 Please inform your Captain and crew that you have a total of %d minutes for this mission.
 
@@ -479,7 +482,7 @@ Good luck.]]), player:getCallSign(), gametimeleft / 60)
         )
     else
         station:sendCommsMessage(
-            player, string.format(_([[%s, your objective is to fend off the incoming Kraylor attack.
+            player, string.format(_("goal-incCall", [[%s, your objective is to fend off the incoming Kraylor attack.
 
 Good luck.]]), player:getCallSign())
         )
@@ -514,7 +517,7 @@ function update(delta)
     if (enemy_count == 0 and getScenarioSetting("Enemies") ~= "Empty") then
         victory("Human Navy")
         if gametimeleft ~= nil then
-            local text = string.format(_("Mission: SUCCESS (%d seconds left)"), math.floor(gametimeleft))
+            local text = string.format(_("msgMainscreen&Spectbanner", "Mission: SUCCESS (%d seconds left)"), math.floor(gametimeleft))
             globalMessage(text)
             setBanner(text)
             return
@@ -525,25 +528,25 @@ function update(delta)
         gametimeleft = gametimeleft - delta
         if gametimeleft < 0 then
             victory("Kraylor")
-            local text = _("Mission: FAILED (time has run out)")
+            local text = _("msgMainscreen&Spectbanner", "Mission: FAILED (time has run out)")
             globalMessage(text)
             setBanner(text)
             return
         end
         if gametimeleft < timewarning then
             if timewarning <= 1 * 60 then -- Less then 1 minutes left.
-                for _, player in ipairs(playerList) do
-                    friendlyList[1]:sendCommsMessage(player, string.format(_([[%s, you have %d minute remaining.]]), player:getCallSign(), timewarning / 60))
+                for idx, player in ipairs(playerList) do
+                    friendlyList[1]:sendCommsMessage(player, string.format(_("time-incCall", [[%s, you have %d minute remaining.]]), player:getCallSign(), timewarning / 60))
                 end
                 timewarning = timewarning - 2 * 60
             elseif timewarning <= 5 * 60 then -- Less then 5 minutes left. Warn ever 2 minutes instead of every 5.
-                for _, player in ipairs(playerList) do
-                    friendlyList[1]:sendCommsMessage(player, string.format(_([[%s, you have %d minutes remaining.]]), player:getCallSign(), timewarning / 60))
+                for idx, player in ipairs(playerList) do
+                    friendlyList[1]:sendCommsMessage(player, string.format(_("time-incCall", [[%s, you have %d minutes remaining.]]), player:getCallSign(), timewarning / 60))
                 end
                 timewarning = timewarning - 2 * 60
             else
-                for _, player in ipairs(playerList) do
-                    friendlyList[1]:sendCommsMessage(player, string.format(_([[%s, you have %d minutes remaining of mission time.]]), player:getCallSign(), timewarning / 60))
+                for idx, player in ipairs(playerList) do
+                    friendlyList[1]:sendCommsMessage(player, string.format(_("time-incCall", [[%s, you have %d minutes remaining of mission time.]]), player:getCallSign(), timewarning / 60))
                 end
                 timewarning = timewarning - 5 * 60
             end
@@ -553,7 +556,7 @@ function update(delta)
     -- If all allies are destroyed, the Humans (players) lose.
     if friendly_count == 0 then
         victory("Kraylor")
-        local text = _("Mission: FAILED (no friendlies left)")
+        local text = _("msgMainscreen&Spectbanner", "Mission: FAILED (no friendlies left)")
         globalMessage(text)
         setBanner(text)
         return
@@ -570,7 +573,7 @@ function update(delta)
     -- If last player ship is destroyed, the Humans (players) lose.
     if player_count == 0 then
         victory("Kraylor")
-        local text = _("Mission: FAILED (all your ships destroyed)")
+        local text = _("msgMainscreen&Spectbanner", "Mission: FAILED (all your ships destroyed)")
         globalMessage(text)
         setBanner(text)
         return
@@ -578,6 +581,6 @@ function update(delta)
     
     -- Set banner for cinematic and top down views.
     if gametimeleft ~= nil then
-        setBanner(string.format(_("Mission in progress - Time left: %d:%02d - Enemies: %d"), math.floor(gametimeleft / 60), math.floor(gametimeleft % 60), enemy_count))
+        setBanner(string.format(_("msgSpectbanner", "Mission in progress - Time left: %d:%02d - Enemies: %d"), math.floor(gametimeleft / 60), math.floor(gametimeleft % 60), enemy_count))
     end
 end

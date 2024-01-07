@@ -25,21 +25,24 @@ GuiCombatManeuver::GuiCombatManeuver(GuiContainer* owner, string id)
     slider->setPosition(0, -50, sp::Alignment::BottomCenter)->setSize(GuiElement::GuiSizeMax, 165);
 
     (new GuiPowerDamageIndicator(slider, id + "_STRAFE_INDICATOR", SYS_Maneuver, sp::Alignment::CenterLeft))->setPosition(0, 0, sp::Alignment::BottomLeft)->setSize(GuiElement::GuiSizeMax, 50);
-    (new GuiPowerDamageIndicator(slider, id + "_BOOST_INDICATOR", SYS_Impulse, sp::Alignment::BottomLeft))->setPosition(0, 0, sp::Alignment::BottomLeft)->setSize(GuiElement::GuiSizeMax, 50);
+    (new GuiPowerDamageIndicator(slider, id + "_BOOST_INDICATOR", SYS_Impulse, sp::Alignment::BottomLeft))->setPosition(0, -50, sp::Alignment::BottomLeft)->setSize(GuiElement::GuiSizeMax, 50);
 }
 
 void GuiCombatManeuver::onUpdate()
 {
     setVisible(my_spaceship && my_spaceship->getCanCombatManeuver());
 
-    float strafe = keys.helms_combat_right.getValue() - keys.helms_combat_left.getValue();
-    float boost = std::max(0.0f, keys.helms_combat_boost.getValue());
-    if (strafe != 0.0f || hotkey_strafe_active)
-        setStrafeValue(strafe);
-    hotkey_strafe_active = strafe != 0.0f;
-    if (boost > 0.0f || hotkey_boost_active)
-        setBoostValue(boost);
-    hotkey_boost_active = boost > 0.0f;
+    if (isVisible())
+    {
+        float strafe = keys.helms_combat_right.getValue() - keys.helms_combat_left.getValue();
+        float boost = std::max(0.0f, keys.helms_combat_boost.getValue());
+        if (strafe != 0.0f || hotkey_strafe_active)
+            setStrafeValue(strafe);
+        hotkey_strafe_active = strafe != 0.0f;
+        if (boost > 0.0f || hotkey_boost_active)
+            setBoostValue(boost);
+        hotkey_boost_active = boost > 0.0f;
+    }
 }
 
 void GuiCombatManeuver::onDraw(sp::RenderTarget& target)

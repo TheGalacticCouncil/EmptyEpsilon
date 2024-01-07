@@ -19,6 +19,7 @@ private:
     GuiSelector* camera_lock_selector;
     GuiToggleButton* camera_lock_toggle;
     GuiToggleButton* camera_lock_tot_toggle;
+    GuiToggleButton* camera_lock_cycle_toggle;
     float min_camera_distance;
     float max_camera_distance;
     glm::vec2 camera_rotation_vector{0, 0};
@@ -47,8 +48,10 @@ private:
     float tot_distance_2D;
     float tot_distance_3D;
 
+    float cycle_time;
+
 public:
-    explicit CinematicViewScreen(int playerShip = 0);
+    explicit CinematicViewScreen(RenderLayer* render_layer, int playerShip = 0);
 
     virtual void update(float delta) override;
 };

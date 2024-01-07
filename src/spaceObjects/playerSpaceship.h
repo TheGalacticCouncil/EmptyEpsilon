@@ -36,7 +36,7 @@ class PlayerSpaceship : public SpaceShip
 public:
     // Power consumption and generation base rates
     constexpr static float default_energy_shield_use_per_second = 1.5f;
-    constexpr static float default_energy_warp_per_second = 1.0f;
+    constexpr static float default_energy_warp_per_second = 1.7f;
     // Total coolant
     constexpr static float max_coolant_per_system = 10.0f;
     float max_coolant;
@@ -59,10 +59,11 @@ public:
         string prefix;
         string text;
         glm::u8vec4 color;
+        unsigned int seq;
 
         ShipLogEntry() {}
-        ShipLogEntry(string prefix, string text, glm::u8vec4 color)
-        : prefix(prefix), text(text), color(color) {}
+        ShipLogEntry(string prefix, string text, glm::u8vec4 color, unsigned int seq)
+        : prefix(prefix), text(text), color(color), seq(seq) {}
 
         bool operator!=(const ShipLogEntry& e) { return prefix != e.prefix || text != e.text || color != e.color; }
     };
@@ -114,6 +115,7 @@ private:
     std::vector<ShipLogEntry> ships_log;
     float energy_shield_use_per_second = default_energy_shield_use_per_second;
     float energy_warp_per_second = default_energy_warp_per_second;
+    unsigned int last_log_seq = 0;
 public:
     std::vector<CustomShipFunction> custom_functions;
 

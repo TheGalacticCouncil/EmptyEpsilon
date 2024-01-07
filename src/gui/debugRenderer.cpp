@@ -1,11 +1,10 @@
 #include "debugRenderer.h"
-#include "main.h"
 #include "multiplayer_server.h"
 #include "hotkeyConfig.h"
 
 
-DebugRenderer::DebugRenderer()
-: Renderable(mouseLayer)
+DebugRenderer::DebugRenderer(RenderLayer* renderLayer)
+: Renderable(renderLayer)
 {
     fps = 0.0;
     fps_counter = 0;
@@ -50,7 +49,7 @@ void DebugRenderer::render(sp::RenderTarget& renderer)
 
     if (show_timing_graph)
     {
-        auto window_size = renderer.getPhysicalSize();
+        auto window_size = renderer.getVirtualSize();
         if (timing_graph_points.size() > size_t(window_size.x))
             timing_graph_points.clear();
         timing_graph_points.push_back(engine->getEngineTiming());

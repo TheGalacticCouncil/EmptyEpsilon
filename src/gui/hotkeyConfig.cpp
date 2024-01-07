@@ -4,6 +4,72 @@
 #include "shipTemplate.h"
 
 Keys keys;
+extern sp::io::Keybinding fullscreen_key;
+
+// Cinematic Keys
+Keys::CinematicKeys::CinematicKeys() :
+    toggle_ui("CINEMATIC_TOGGLE_UI", "H"),
+    lock_camera("CINEMATIC_LOCK_CAMERA", "L"),
+    cycle_camera("CINEMATIC_CYCLE_CAMERA", "C"),
+    previous_player_ship("CINEMATIC_PREVIOUS_PLAYER_SHIP", "J"),
+    next_player_ship("CINEMATIC_NEXT_PLAYER_SHIP", "K"),
+    move_forward("CINEMATIC_MOVE_FORWARD", "W"),
+    move_backward("CINEMATIC_MOVE_BACKWARD", "S"),
+    strafe_left("CINEMATIC_STRAFE_LEFT", "A"),
+    strafe_right("CINEMATIC_STRAFE_RIGHT", "D"),
+    move_up("CINEMATIC_MOVE_UP", "R"),
+    move_down("CINEMATIC_MOVE_DOWN", "F"),
+    rotate_left("CINEMATIC_TILT_LEFT", "Left"),
+    rotate_right("CINEMATIC_TILT_RIGHT", "Right"),
+    tilt_down("CINEMATIC_TILT_DOWN", "Down"),
+    tilt_up("CINEMATIC_TILT_UP", "Up")
+{
+}
+
+void Keys::CinematicKeys::init()
+{
+    const auto localized_category = tr("hotkey_menu", "Cinematic View");
+    toggle_ui.setLabel(localized_category, tr("hotkey_Cinematic", "Toggle UI"));
+    lock_camera.setLabel(localized_category, tr("hotkey_Cinematic", "Camera lock"));
+    cycle_camera.setLabel(localized_category, tr("hotkey_Cinematic", "Camera cycle"));
+    previous_player_ship.setLabel(localized_category, tr("hotkey_Cinematic", "Cycle previous player ship"));
+    next_player_ship.setLabel(localized_category, tr("hotkey_Cinematic", "Cycle next player ship"));
+    move_forward.setLabel(localized_category, tr("hotkey_Cinematic", "Move forward"));
+    move_backward.setLabel(localized_category, tr("hotkey_Cinematic", "Move backward"));
+    strafe_left.setLabel(localized_category, tr("hotkey_Cinematic", "Strafe left"));
+    strafe_right.setLabel(localized_category, tr("hotkey_Cinematic", "Strafe right"));
+    move_up.setLabel(localized_category, tr("hotkey_Cinematic", "Move up"));
+    move_down.setLabel(localized_category, tr("hotkey_Cinematic", "Move down"));
+    rotate_left.setLabel(localized_category, tr("hotkey_Cinematic", "Rotate left"));
+    rotate_right.setLabel(localized_category, tr("hotkey_Cinematic", "Rotate right"));
+    tilt_down.setLabel(localized_category, tr("hotkey_Cinematic", "Tilt down"));
+    tilt_up.setLabel(localized_category, tr("hotkey_Cinematic", "Tilt up"));
+}
+
+Keys::TopDownKeys::TopDownKeys() :
+    toggle_ui("TOPDOWN_TOGGLE_UI", "H"),
+    lock_camera("TOPDOWN_LOCK_CAMERA", "L"),
+    previous_player_ship("TOPDOWN_PREVIOUS_PLAYER_SHIP", "J"),
+    next_player_ship("TOPDOWN_NEXT_PLAYER_SHIP", "K"),
+    pan_up("TOPDOWN_PAN_UP", "W"),
+    pan_down("TOPDOWN_PAN_DOWN", "S"),
+    pan_left("TOPDOWN_PAN_LEFT", "A"),
+    pan_right("TOPDOWN_PAN_RIGHT", "D")
+{}
+
+void Keys::TopDownKeys::init()
+{
+    const auto localized_category = tr("hotkey_menu", "Top-down View");
+    toggle_ui.setLabel(localized_category, tr("hotkey_Topdown", "Toggle UI"));
+    lock_camera.setLabel(localized_category, tr("hotkey_Topdown", "Camera lock"));
+    previous_player_ship.setLabel(localized_category, tr("hotkey_Topdown", "Cycle previous player ship"));
+    next_player_ship.setLabel(localized_category, tr("hotkey_Topdown", "Cycle next player ship"));
+    pan_up.setLabel(localized_category, tr("hotkey_Topdown", "Pan up"));
+    pan_down.setLabel(localized_category, tr("hotkey_Topdown", "Pan down"));
+    pan_left.setLabel(localized_category, tr("hotkey_Topdown", "Pan left"));
+    pan_right.setLabel(localized_category, tr("hotkey_Topdown", "Pan right"));
+
+}
 
 Keys::Keys() :
     //Basic
@@ -36,7 +102,11 @@ Keys::Keys() :
 
     //helms
     helms_increase_impulse("HELMS_IMPULSE_INCREASE", "Up"),
+    helms_increase_impulse_1("HELMS_IMPULSE_INCREASE_1"),
+    helms_increase_impulse_10("HELMS_IMPULSE_INCREASE_10"),
     helms_decrease_impulse("HELMS_IMPULSE_DECREASE", "Down"),
+    helms_decrease_impulse_1("HELMS_IMPULSE_DECREASE_1"),
+    helms_decrease_impulse_10("HELMS_IMPULSE_DECREASE_10"),
     helms_set_impulse("HELMS_SET_IMPULSE", {"joy:0:axis:1", "gamecontroller:0:axis:lefty"}),
     helms_zero_impulse("HELMS_IMPULSE_ZERO", "Space"),
     helms_max_impulse("HELMS_IMPULSE_MAX"),
@@ -154,6 +224,12 @@ Keys::Keys() :
         {"SIENCE_SCAN_PARAM_DECREASE_3"},
         {"SIENCE_SCAN_PARAM_DECREASE_4"},
     }},
+    science_scan_param_set{{
+        {"SIENCE_SCAN_PARAM_SET_1"},
+        {"SIENCE_SCAN_PARAM_SET_2"},
+        {"SIENCE_SCAN_PARAM_SET_3"},
+        {"SIENCE_SCAN_PARAM_SET_4"},
+    }},
 
     //Engineering
     engineering_select_reactor("ENGINEERING_SELECT_SYSTEM_REACTOR", "1"),
@@ -186,6 +262,10 @@ Keys::Keys() :
     engineering_self_destruct_confirm("ENGINEERING_SELF_DESTRUCT_CONFIRM"),
     engineering_self_destruct_cancel("ENGINEERING_SELF_DESTRUCT_CANCEL"),
 
+    relay_alert_level_none("RELAY_ALERT_NONE"),
+    relay_alert_level_yellow("RELAY_ALERT_YELLOW"),
+    relay_alert_level_red("RELAY_ALERT_RED"),
+
     gm_delete("GM_DELETE", "Delete"),
     gm_clipboardcopy("GM_CLIPBOARD_COPY", "F5"),
 
@@ -205,6 +285,7 @@ void Keys::init()
     zoom_out.setLabel(tr("hotkey_menu", "Basic"), tr("hotkey_Basic", "Zoom out on zoomable stations"));
     voice_all.setLabel(tr("hotkey_menu", "Basic"), tr("hotkey_Basic", "Broadcast voice chat to server"));
     voice_ship.setLabel(tr("hotkey_menu", "Basic"), tr("hotkey_Basic", "Broadcast voice chat to ship"));
+    fullscreen_key.setLabel(tr("hotkey_menu", "Basic"), tr("hotkey_Basic", "Fullscreen toggle"));
 
     //General
     next_station.setLabel(tr("hotkey_menu", "General"), tr("hotkey_General", "Switch to next crew station"));
@@ -227,7 +308,11 @@ void Keys::init()
 
     //helms
     helms_increase_impulse.setLabel(tr("hotkey_menu", "Helms"), tr("hotkey_Helms", "Increase impulse"));
+    helms_increase_impulse_1.setLabel(tr("hotkey_menu", "Helms"), tr("hotkey_Helms", "Increase impulse 1%"));
+    helms_increase_impulse_10.setLabel(tr("hotkey_menu", "Helms"), tr("hotkey_Helms", "Increase impulse 10%"));
     helms_decrease_impulse.setLabel(tr("hotkey_menu", "Helms"), tr("hotkey_Helms", "Decrease impulse"));
+    helms_decrease_impulse_1.setLabel(tr("hotkey_menu", "Helms"), tr("hotkey_Helms", "Decrease impulse 1%"));
+    helms_decrease_impulse_10.setLabel(tr("hotkey_menu", "Helms"), tr("hotkey_Helms", "Decrease impulse 10%"));
     helms_set_impulse.setLabel(tr("hotkey_menu", "Helms"), tr("hotkey_Helms", "Set impulse (joystick)"));
     helms_zero_impulse.setLabel(tr("hotkey_menu", "Helms"), tr("hotkey_Helms", "Zero impulse"));
     helms_max_impulse.setLabel(tr("hotkey_menu", "Helms"), tr("hotkey_Helms", "Max impulse"));
@@ -289,6 +374,7 @@ void Keys::init()
     {
         science_scan_param_increase[n].setLabel(tr("hotkey_menu", "Science"), tr("hotkey_Science", "Scanning parameter {number} increase").format({{"number", string(n+1)}}));
         science_scan_param_decrease[n].setLabel(tr("hotkey_menu", "Science"), tr("hotkey_Science", "Scanning parameter {number} decrease").format({{"number", string(n+1)}}));
+        science_scan_param_set[n].setLabel(tr("hotkey_menu", "Science"), tr("hotkey_Science", "Scanning parameter set {number}").format({{"number", string(n+1)}}));
     }
 
     //Engineering
@@ -322,6 +408,12 @@ void Keys::init()
     engineering_self_destruct_confirm.setLabel(tr("hotkey_menu", "Engineering"), tr("hotkey_Engineering", "Confirm self-destruct"));
     engineering_self_destruct_cancel.setLabel(tr("hotkey_menu", "Engineering"), tr("hotkey_Engineering", "Cancel self-destruct"));
 
+    relay_alert_level_none.setLabel(tr("hotkey_menu", "Relay"), tr("hotkey_Relay", "Alert level: Normal"));
+    relay_alert_level_yellow.setLabel(tr("hotkey_menu", "Relay"), tr("hotkey_Relay", "Alert level: Yellow"));
+    relay_alert_level_red.setLabel(tr("hotkey_menu", "Relay"), tr("hotkey_Relay", "Alert level: Red"));
+
+    cinematic.init();
+    topdown.init();
     //GM
     gm_delete.setLabel(tr("hotkey_menu", "GM"), tr("hotkey_GM", "Delete"));
     gm_clipboardcopy.setLabel(tr("hotkey_menu", "GM"), tr("hotkey_GM", "Copy to clipboard"));
