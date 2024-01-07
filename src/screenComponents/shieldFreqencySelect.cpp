@@ -16,22 +16,19 @@ GuiShieldFrequencySelect::GuiShieldFrequencySelect(GuiContainer* owner, string i
     GuiElement* calibration_row = new GuiElement(this, "");
     calibration_row->setPosition(0, 50, sp::Alignment::TopLeft)->setSize(GuiElement::GuiSizeMax, 50)->setAttribute("layout", "horizontalright");
 
-    new_frequency = new GuiSelector(calibration_row, "", nullptr);
+    new_frequency = new GuiSelector(calibration_row, "", [this](int selected_shield_frequency, string value) {
+        if (my_spaceship) {
+            my_spaceship->selected_shield_frequency = selected_shield_frequency;
+        }
+    });
     new_frequency->setSize(120, 50);
 
     calibrate_button = new GuiButton(calibration_row, "", tr("shields","Calibrate"), [this]() {
         if (my_spaceship)
             my_spaceship->commandSetShieldFrequency(new_frequency->getSelectionIndex());
     });
-    calibrate_button->setPosition(0, 50, sp::Alignment::TopLeft)->setSize(280 * 0.55, 50);
     calibrate_button->setSize(GuiElement::GuiSizeMax, 50);
-    new_frequency = new GuiSelector(this, "", [this](int selected_shield_frequency, string value) {
-        if (my_spaceship) {
-            my_spaceship->selected_shield_frequency = selected_shield_frequency;
-        }
-    });
-    new_frequency->setPosition(280 * 0.55, 50, sp::Alignment::TopLeft)->setSize(280 * 0.45, 50);
-
+    
     for(int n=0; n<=SpaceShip::max_frequency; n++)
     {
         new_frequency->addEntry(frequencyToString(n), string(n));

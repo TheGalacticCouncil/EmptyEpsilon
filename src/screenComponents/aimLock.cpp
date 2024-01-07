@@ -74,7 +74,8 @@ void AimLock::onDraw(sp::RenderTarget& renderer)
     float radius = std::min(rect.size.x, rect.size.y);
 
     renderer.drawSprite("gui/widget/dial_background.png", center, radius);
-    renderer.drawRotatedSprite("gui/widget/dial_button.png", center, radius, (getValue() - min_value) / (max_value - min_value) * 360.0f - view_rotation);
+    //renderer.drawRotatedSprite("gui/widget/dial_button.png", center, radius, (getValue() - min_value) / (max_value - min_value) * 360.0f - view_rotation);
+    renderer.drawRotatedSprite("gui/widget/dial_button.png", center, radius, (my_spaceship->manual_aim_angle - min_value) / (max_value - min_value) * 360.0f - view_rotation);
 }
 
 bool AimLock::onMouseDown(sp::io::Pointer::Button button, glm::vec2 position, sp::io::Pointer::ID id)
@@ -96,11 +97,11 @@ void AimLock::onMouseDrag(glm::vec2 position, sp::io::Pointer::ID id)
     if (new_value > 1.0f)
         new_value -= 1.0f;
     new_value = min_value + (max_value - min_value) * new_value;
-    if (getValue() != new_value)
+    if (my_spaceship->manual_aim_angle != new_value)
     {
-        setValue(new_value);
+        my_spaceship->manual_aim_angle = new_value;
         if (func)
-            func(value);
+            func(my_spaceship->manual_aim_angle);
     }
 }
 
