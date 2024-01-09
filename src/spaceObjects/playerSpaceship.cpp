@@ -1863,15 +1863,17 @@ void PlayerSpaceship::onReceiveClientCommand(int32_t client_id, sp::io::DataBuff
             int32_t new_frequency;
             packet >> new_frequency;
 
-            if (new_frequency < 0)
+            selected_shield_frequency = new_frequency;
+            
+            if (selected_shield_frequency < 0)
                 selected_shield_frequency = 0;
-            if (new_frequency > SpaceShip::max_frequency)
+            if (selected_shield_frequency > SpaceShip::max_frequency)
                 selected_shield_frequency = SpaceShip::max_frequency;
-            else
-                selected_shield_frequency = new_frequency;
         }
         break;
     case CMD_SET_NEXT_SHIELD_FREQUENCY_SELECTION:
+        std::cout << "processing CMD_SET_NEXT_SHIELD_FREQUENCY_SELECTION" << std::endl;
+        std::cout << selected_shield_frequency << std::endl;
         if (shield_calibration_delay <= 0.0) // TODO: Is it ok to change target while calibrating? I'd say no.
         {
             if (selected_shield_frequency != SpaceShip::max_frequency)
@@ -1879,6 +1881,8 @@ void PlayerSpaceship::onReceiveClientCommand(int32_t client_id, sp::io::DataBuff
         }
         break;
     case CMD_SET_PREVIOUS_SHIELD_FREQUENCY_SELECTION:
+        std::cout << "processing CMD_SET_PREVIOUS_SHIELD_FREQUENCY_SELECTION" << std::endl;
+        std::cout << selected_shield_frequency << std::endl;
         if (shield_calibration_delay <= 0.0) // TODO: Is it ok to change target while calibrating? I'd say no.
         {
             if (selected_shield_frequency != 0)
@@ -2356,6 +2360,7 @@ void PlayerSpaceship::commandSetShieldFrequencySelection(int32_t frequency)
 
 void PlayerSpaceship::commandSetNextShieldFrequencySelection()
 {
+    std::cout << "commandSetNextShieldFrequencySelection() called" << std::endl;
     sp::io::DataBuffer packet;
     packet << CMD_SET_NEXT_SHIELD_FREQUENCY_SELECTION;
     sendClientCommand(packet);
@@ -2363,6 +2368,7 @@ void PlayerSpaceship::commandSetNextShieldFrequencySelection()
 
 void PlayerSpaceship::commandSetPreviousShieldFrequencySelection()
 {
+    std::cout << "commandSetPreviousShieldFrequencySelection() called" << std::endl;
     sp::io::DataBuffer packet;
     packet << CMD_SET_PREVIOUS_SHIELD_FREQUENCY_SELECTION;
     sendClientCommand(packet);

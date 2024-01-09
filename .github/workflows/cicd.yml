@@ -29,7 +29,7 @@ jobs:
       - name: SeriousProton Checkout
         uses: actions/checkout@v2
         with:
-          repository: daid/SeriousProton
+          repository: TheGalacticCouncil/SeriousProton
           path: SeriousProton
           ref: master
       - name: EmptyEpsilon Checkout
@@ -55,7 +55,7 @@ jobs:
       - name: SeriousProton Checkout
         uses: actions/checkout@v2
         with:
-          repository: daid/SeriousProton
+          repository: TheGalacticCouncil/SeriousProton
           path: SeriousProton
           ref: master
       - name: EmptyEpsilon Checkout
@@ -78,7 +78,7 @@ jobs:
     steps:
       - name: Dependencies
         run: |
-          $sdl_version = "2.0.16"
+          $sdl_version = "2.28.5"
           $sdl_link = "https://libsdl.org/release/SDL2-devel-$sdl_version-VC.zip"
           $sdl_zip = "$env:GITHUB_WORKSPACE/sdl-dev.zip"
           (new-object System.Net.WebClient).DownloadFile($sdl_link, $sdl_zip)
@@ -113,7 +113,7 @@ jobs:
       - name: SeriousProton Checkout
         uses: actions/checkout@v2
         with:
-          repository: daid/SeriousProton
+          repository: TheGalacticCouncil/SeriousProton
           path: SeriousProton
           ref: master
       - name: Create Build Environment

@@ -18,7 +18,7 @@ GuiShieldFrequencySelect::GuiShieldFrequencySelect(GuiContainer* owner, string i
 
     new_frequency = new GuiSelector(calibration_row, "", [this](int selected_shield_frequency, string value) {
         if (my_spaceship) {
-            my_spaceship->selected_shield_frequency = selected_shield_frequency;
+            my_spaceship->commandSetShieldFrequencySelection(selected_shield_frequency);
         }
     });
     new_frequency->setSize(120, 50);
