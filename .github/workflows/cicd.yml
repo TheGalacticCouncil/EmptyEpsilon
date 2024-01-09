@@ -44,7 +44,7 @@ jobs:
           ninja package
       - uses: actions/upload-artifact@v2
         with:
-          name: EE-Windows
+          name: EE-Windows-${{github.sha}}
           path: /home/runner/work/EmptyEpsilon/EmptyEpsilon/_build_win32/EmptyEpsilon.zip
   macos:
     name: MacOS
