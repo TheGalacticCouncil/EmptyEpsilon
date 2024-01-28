@@ -462,6 +462,9 @@ REGISTER_SCRIPT_SUBCLASS(PlayerSpaceship, SpaceShip)
     /// All SpaceObjects within this radius are dealt damage upon self-destruction.
     /// Example: ship:getSelfDestructSize()
     REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, getSelfDestructSize);
+    /// Returns current coolant level of a system.
+    /// Example: player:getCurrentCoolantLevel("Reactor")
+    REGISTER_SCRIPT_CLASS_FUNCTION(PlayerSpaceship, getCurrentCoolantLevel);
 }
 
 static const int16_t CMD_TARGET_ROTATION = 0x0001;

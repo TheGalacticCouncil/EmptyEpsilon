@@ -311,6 +311,7 @@ public:
     void setMaxCoolant(float coolant);
     float getMaxCoolant() { return max_coolant; }
     void setAutoCoolant(bool active) { auto_coolant_enabled = active; }
+    float getCurrentCoolantLevel(ESystem system) { return systems[system].coolant_level; }
     int getRepairCrewCount();
     void setRepairCrewCount(int amount);
     EAlertLevel getAlertLevel() { return alert_level; }
