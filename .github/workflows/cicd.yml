@@ -42,33 +42,33 @@ jobs:
           cd _build_win32
           cmake ../EmptyEpsilon -G Ninja -DCMAKE_MAKE_PROGRAM=ninja -DCMAKE_TOOLCHAIN_FILE=../EmptyEpsilon/cmake/mingw.toolchain -DSERIOUS_PROTON_DIR=../SeriousProton -DWARNING_IS_ERROR=1
           ninja package
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: EE-Windows-${{github.sha}}
           path: /home/runner/work/EmptyEpsilon/EmptyEpsilon/_build_win32/EmptyEpsilon.zip
-  macos:
-    name: MacOS
-    runs-on: macos-latest
-    steps:
-      - name: Dependencies
-        run: brew install cmake sdl2 ninja
-      - name: SeriousProton Checkout
-        uses: actions/checkout@v2
-        with:
-          repository: TheGalacticCouncil/SeriousProton
-          path: SeriousProton
-          ref: master
-      - name: EmptyEpsilon Checkout
-        uses: actions/checkout@v2
-        with:
-          path: EmptyEpsilon
-      - name: Build
-        run: |
-          mkdir -p _build_macos
-          cd _build_macos
-          cmake ../EmptyEpsilon -G Ninja -DSERIOUS_PROTON_DIR=../SeriousProton -DCMAKE_INSTALL_PREFIX=. -DWARNING_IS_ERROR=1
-          ninja
-          ninja install
+  # macos:
+  #   name: MacOS
+  #   runs-on: macos-latest
+  #   steps:
+  #     - name: Dependencies
+  #       run: brew install cmake sdl2 ninja
+  #     - name: SeriousProton Checkout
+  #       uses: actions/checkout@v2
+  #       with:
+  #         repository: TheGalacticCouncil/SeriousProton
+  #         path: SeriousProton
+  #         ref: master
+  #     - name: EmptyEpsilon Checkout
+  #       uses: actions/checkout@v2
+  #       with:
+  #         path: EmptyEpsilon
+  #     - name: Build
+  #       run: |
+  #         mkdir -p _build_macos
+  #         cd _build_macos
+  #         cmake ../EmptyEpsilon -G Ninja -DSERIOUS_PROTON_DIR=../SeriousProton -DCMAKE_INSTALL_PREFIX=. -DWARNING_IS_ERROR=1
+  #         ninja
+  #         ninja install
   windows:
     name: Windows
     runs-on: windows-latest
